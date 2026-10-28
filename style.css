@@ -1,0 +1,29 @@
+:root{--brand:#0f5f73;--brand-ink:#ffffff;--tint:#e6f2f4;--ink:#1d2327;--muted:#5b6770;--line:#d5dee2;--bg:#ffffff;--warn:#fff4dc;--warn-line:#e7c56f}
+@media (prefers-color-scheme:dark){:root{--brand:#4fb3c9;--brand-ink:#08262e;--tint:#14313a;--ink:#e6eaec;--muted:#9aa7ae;--line:#2c3a40;--bg:#0f1417;--warn:#3a3020;--warn-line:#7a6430}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:32px 16px 64px}
+h1{color:var(--brand);font-size:2rem;line-height:1.2;margin:0 0 6px}
+h2{font-size:1.35rem;margin:36px 0 12px}
+a{color:var(--brand)}
+.meta{color:var(--muted);font-size:.9rem;margin:0 0 20px}
+.btn{display:block;text-align:center;background:var(--brand);color:var(--brand-ink);text-decoration:none;font-weight:700;font-size:1.1rem;padding:16px;border-radius:12px;margin:10px 0}
+.btn:hover{filter:brightness(1.08)}
+.btn.off{opacity:.45;pointer-events:none}
+.note{background:var(--tint);border-radius:12px;padding:14px 16px;font-size:.95rem;margin:10px 0}
+.warn{background:var(--warn);border:1px solid var(--warn-line);border-radius:12px;padding:12px 16px;font-size:.95rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.card{display:block;border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--brand)}
+.card b{display:block;color:var(--brand);margin-bottom:4px}
+.card span{color:var(--muted);font-size:.9rem}
+ul.files li{margin:6px 0}
+.size{color:var(--muted);font-size:.85rem}
+footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);margin-top:48px;padding-top:16px}
+.doc table{border-collapse:collapse;display:block;overflow-x:auto;margin:12px 0}
+.doc th,.doc td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+.doc pre,.doc code{background:var(--tint);border-radius:6px}
+.doc pre{padding:12px;overflow-x:auto}
+.doc code{padding:1px 4px}
+.doc pre code{padding:0}
+.back{display:inline-block;margin-bottom:16px;font-size:.95rem}

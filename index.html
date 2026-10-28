@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DFU Station Files</title>
+<meta name="description" content="Manuals, schematic and software for the DFU Thermography Screening Station.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>DFU Thermography Screening Station</h1>
+  <p class="meta">Built by eMathrix Technologies · Client acceptance: October 30, 2026</p>
+
+  <div class="warn">
+    <b>Research instrument, not a medical device.</b> The station does not diagnose,
+    grade or treat anyone. Wagner grades come only from a licensed clinician.
+  </div>
+
+  <h2>Software</h2>
+  <!-- APP: replace href and remove class "off" when the file is in files/ -->
+  <a class="btn off" href="#" aria-disabled="true">Download the station software (coming soon)</a>
+  <div class="note">
+    The station runs fully offline on the Raspberry Pi 5. Scans stay on the
+    station and are copied out only by USB export. Never upload scans or
+    session files to any online service.
+  </div>
+
+  <h2>Schematic</h2>
+  <!-- SCHEMATIC: replace href and remove class "off" when the file is in files/ -->
+  <a class="btn off" href="#" aria-disabled="true">Open the wiring schematic (coming soon)</a>
+
+  <h2>Manuals</h2>
+  <div class="grid">
+    <a class="card" href="docs/operator_manual.html"><b>Operator manual</b><span>Running a scan, from reference code to results.</span></a>
+    <a class="card" href="docs/acceptance_test.html"><b>Acceptance test (Annex A)</b><span>The 14-line runbook for client acceptance.</span></a>
+    <a class="card" href="docs/calibration.html"><b>Calibration manual</b><span>Per-unit calibration of cameras and sensors.</span></a>
+    <a class="card" href="docs/methodology.html"><b>Methodology</b><span>How the system was developed and tested.</span></a>
+  </div>
+
+  <h2>All files</h2>
+  <ul class="files">
+    <li><a href="docs/operator_manual.html">Operator manual</a></li>
+    <li><a href="docs/acceptance_test.html">Acceptance test runbook (Annex A)</a></li>
+    <li><a href="docs/calibration.html">Calibration manual</a></li>
+    <li><a href="docs/methodology.html">System development and testing methodology</a></li>
+    <!-- FILES: add schematic and software rows here -->
+  </ul>
+
+  <footer>eMathrix Technologies, Cabuyao, Laguna · Contract EMX-2026-DFUSCAN-01</footer>
+</main>
+</body>
+</html>

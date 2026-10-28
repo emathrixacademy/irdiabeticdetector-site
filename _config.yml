@@ -1,0 +1,5 @@
+title: DFU Thermography Screening Station
+markdown: kramdown
+kramdown:
+  input: GFM
+exclude: [README.md]
