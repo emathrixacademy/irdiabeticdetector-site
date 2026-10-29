@@ -3,113 +3,156 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DFU Station 3D Model</title>
-<meta name="description" content="Interactive 3D simulation of the DFU Thermography Screening Station: operator touchscreen, capture sequence and parts.">
+<title>DFU Station Practice Simulator</title>
+<meta name="description" content="Hands-on practice simulator for the DFU Thermography Screening Station: practice patients, the station's touchscreen, captured pictures, results and records.">
 <style>
-  :root { --ink: #1d2730; --muted: #5d6b77; --line: #d5dde3; --accent: #1f6fa8;
-          --t-bg: #263238; --t-btn: #455a64; --t-border: #90a4ae; --t-on: #1565c0; --t-green: #2e7d32; --t-red: #c62828; }
+  :root { --ink: #1d2730; --muted: #5d6b77; --line: #d5dde3; --accent: #1f6fa8; --ok: #2e7d32; --bad: #c62828;
+          --t-bg: #101418; --t-btn: #26323d; --t-border: #44525f; --t-green: #2e7d32; --t-red: #c62828; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #e9eef2; color: var(--ink);
                font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  #view { position: fixed; top: 0; left: 0; bottom: 0; right: 620px; }
+  #view { position: fixed; top: 0; left: 0; bottom: 0; right: 640px; }
   #view canvas { display: block; }
-  #top { position: fixed; top: 0; left: 0; right: 620px; padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+  #top { position: fixed; top: 0; left: 0; right: 640px; padding: 10px 16px; display: flex; align-items: center; gap: 12px;
          flex-wrap: wrap; background: linear-gradient(#ffffffee, #ffffffaa); border-bottom: 1px solid var(--line); z-index: 5; }
   #top h1 { margin: 0; font-size: 16px; font-weight: 700; }
   #top .sub { color: var(--muted); font-size: 12px; }
   #top a { color: var(--accent); font-size: 12.5px; text-decoration: none; }
   #concept { margin-left: auto; background: #fff4d6; border: 1px solid #e5c56a; color: #6b4e00; padding: 5px 10px;
              border-radius: 6px; font-weight: 650; font-size: 12.5px; }
-  #side { position: fixed; top: 0; right: 0; bottom: 0; width: 620px; overflow-y: auto; background: #f5f7f9;
+  #side { position: fixed; top: 0; right: 0; bottom: 0; width: 640px; overflow-y: auto; background: #f5f7f9;
           border-left: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 10px; z-index: 6; }
   .card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
   .card h2 { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
   .note { color: var(--muted); font-size: 11.5px; margin-top: 6px; }
   #story { font-size: 13.5px; min-height: 40px; }
-  #part { font-size: 13.5px; min-height: 40px; }
+  #part { font-size: 13.5px; min-height: 30px; }
   #part .ref { color: var(--muted); font-size: 12px; }
   .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .simbtn { font: inherit; background: #fff; border: 1px solid #b9c5cd; border-radius: 7px; padding: 6px 10px; cursor: pointer; }
   .simbtn:hover { border-color: var(--accent); }
   .simbtn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .simbtn.big { font-weight: 700; padding: 8px 14px; }
   label.chk { font-size: 12.5px; color: var(--muted); display: flex; gap: 5px; align-items: center; cursor: pointer; }
   .slider { display: grid; grid-template-columns: 170px 1fr 70px; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
   .slider input { width: 100%; }
+  select { font: inherit; padding: 6px 8px; border: 1px solid #b9c5cd; border-radius: 7px; background: #fff; flex: 1; min-width: 0; }
+  #caseBrief { font-size: 13px; margin-top: 8px; background: #f1f6f9; border-radius: 8px; padding: 8px 10px; }
+
+  /* checklist */
+  #checks { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+  #checks li { display: flex; gap: 8px; padding: 3px 0; border-bottom: 1px dashed #e3e9ed; }
+  #checks li i { font-style: normal; width: 18px; text-align: center; font-weight: 800; color: #9aa7b0; }
+  #checks li.ok i { color: var(--ok); } #checks li.bad i { color: var(--bad); }
+  #checks li small { display: block; color: var(--bad); }
+  #score { margin-top: 8px; font-weight: 700; }
+
+  /* patient and room controls */
+  .ctl { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+  .tog { display: flex; align-items: center; gap: 8px; font-size: 13px; background: #f7f9fa; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; cursor: pointer; user-select: none; }
+  .tog b { margin-left: auto; font-size: 11.5px; padding: 1px 7px; border-radius: 9px; background: #e3e9ed; color: var(--muted); }
+  .tog.on b { background: #d7f0dc; color: var(--ok); }
+  .tog.warn b { background: #fde2e2; color: var(--bad); }
+  #room { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 13px; }
+  #roomT { font-size: 22px; font-weight: 800; min-width: 92px; }
+  #roomT.badT { color: var(--bad); }
+
+  /* records */
+  #recTable { width: 100%; border-collapse: collapse; font-size: 12px; }
+  #recTable th { text-align: left; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line); padding: 3px 4px; }
+  #recTable td { padding: 3px 4px; border-bottom: 1px solid #eef2f4; cursor: pointer; }
+  #recTable tr.sel td { background: #e6f0f8; }
+  #recTable tr:hover td { background: #f1f6f9; }
+  #viewer { display: none; margin-top: 10px; }
+  #viewer .grid { display: grid; grid-template-columns: 330px 1fr; gap: 10px; }
+  #cvRec { width: 330px; height: 248px; image-rendering: pixelated; border-radius: 6px; cursor: crosshair; background: #000; }
+  #measure { font-size: 12.5px; min-height: 36px; margin-top: 4px; }
+  #recRegions { width: 100%; border-collapse: collapse; font-size: 12px; }
+  #recRegions td, #recRegions th { padding: 2px 4px; border-bottom: 1px solid #eef2f4; text-align: right; }
+  #recRegions td:first-child, #recRegions th:first-child { text-align: left; }
+  #recRegions tr.flag td { color: var(--bad); font-weight: 700; }
 
   /* --- the operator's touchscreen: same screens and words as the station app --- */
   #screenWrap { position: relative; width: 100%; }
   #screen { position: absolute; top: 5px; left: 5px; width: 800px; height: 480px; transform-origin: top left;
-            background: var(--t-bg); color: #fff; font-size: 18px; border-radius: 6px; overflow: hidden;
-            box-shadow: 0 0 0 10px #11171b, 0 6px 24px rgba(0,0,0,.25); }
-  #screen .page { position: absolute; inset: 0; padding: 9px; display: none; flex-direction: column; gap: 8px; }
+            background: var(--t-bg); color: #f2f2f2; font-size: 16px; border-radius: 6px; overflow: hidden;
+            box-shadow: 0 0 0 10px #0a0d10, 0 6px 24px rgba(0,0,0,.25); }
+  #screen .page { position: absolute; inset: 0; padding: 6px 9px; display: none; flex-direction: column; gap: 5px; }
   #screen .page.show { display: flex; }
-  #screen button { font: inherit; color: #fff; background: var(--t-btn); border: 2px solid var(--t-border); border-radius: 8px;
-                   padding: 6px; min-height: 44px; cursor: pointer; }
-  #screen button.primary { background: var(--t-green); font-weight: bold; }
-  #screen button:disabled { color: #78909c; border-color: #546e7a; background: #37474f; cursor: default; }
-  .hbox { display: flex; gap: 8px; }
-  .t-title { font-size: 22px; font-weight: bold; text-align: center; }
-  .t-note { font-size: 15px; color: #b0bec5; text-align: center; }
-  .t-code { font-size: 30px; text-align: center; background: #37474f; border-radius: 6px; min-height: 46px; letter-spacing: .08em; }
-  #keys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex: 1; }
-  #screen #keys button { font-size: 22px; }
-  .pics { display: flex; flex-direction: column; gap: 4px; width: 330px; }
-  .pics canvas { background: #11171b; border-radius: 4px; width: 330px; }
-  .pics .cap { font-size: 13px; color: #b0bec5; }
-  .sidep { flex: 1; display: flex; flex-direction: column; gap: 7px; }
-  #tCountdown { font-size: 40px; font-weight: bold; text-align: center; }
-  #tState { font-size: 18px; font-weight: bold; text-align: center; min-height: 26px; }
-  #tAmbient { font-size: 15px; text-align: center; color: #c5e1a5; }
-  #screen #tCapture { font-size: 26px; min-height: 70px; }
-  #tMsg { position: absolute; left: 60px; right: 60px; top: 120px; background: #fff; color: #1d2730; border-radius: 10px;
-          padding: 16px 18px; display: none; box-shadow: 0 8px 30px rgba(0,0,0,.5); font-size: 16px; }
-  #tMsg b { display: block; font-size: 20px; margin-bottom: 6px; color: var(--t-red); }
-  #screen #tMsg button { margin-top: 12px; color: #fff; }
-  #rTable { border-collapse: collapse; font-size: 15px; width: 100%; }
-  #rTable th { background: #37474f; font-size: 14px; padding: 3px 6px; text-align: left; }
-  #rTable td { padding: 2px 6px; border-bottom: 1px solid #546e7a; }
-  .simTag { position: absolute; right: 8px; bottom: 2px; font-size: 10px; color: #78909c; letter-spacing: .08em; }
+  #screen button { font: inherit; color: #f2f2f2; background: var(--t-btn); border: 1px solid var(--t-border); border-radius: 6px;
+                   padding: 4px; min-height: 34px; cursor: pointer; }
+  #screen button:active { background: #3a4b5a; }
+  #screen button.primary { background: #1f6f43; border-color: #2e8b57; font-weight: bold; }
+  #screen button.grey { background: #2b3238; color: #9aa7b0; }
+  .hbox { display: flex; gap: 6px; }
+  .t-title { font-size: 20px; font-weight: bold; text-align: center; }
+  .t-note { font-size: 13px; color: #b0bec5; text-align: center; }
+  .t-info { font-size: 12px; color: #8fa1ad; text-align: center; white-space: pre-line; }
+  .t-code { font-size: 26px; text-align: center; background: #1b232b; border: 1px solid #44525f; border-radius: 6px; min-height: 42px; letter-spacing: .06em; }
+  .krow { display: flex; gap: 4px; }
+  .krow button { flex: 1; font-size: 17px !important; min-height: 38px !important; }
+  .pics { display: flex; flex-direction: column; gap: 3px; width: 400px; }
+  .pics canvas { background: #000; border-radius: 3px; image-rendering: pixelated; }
+  .pics .cap { font-size: 12px; color: #b0bec5; }
+  .sidep { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  #tCountdown { font-size: 46px; font-weight: bold; text-align: center; line-height: 1.1; }
+  #tState { font-size: 17px; font-weight: bold; text-align: center; min-height: 24px; }
+  #tAmbient { font-size: 14px; text-align: center; }
+  #screen #tCapture { font-size: 26px; min-height: 76px; }
+  #tMsg { position: absolute; left: 70px; right: 70px; top: 110px; background: #f4f6f8; color: #1d2730; border-radius: 8px;
+          padding: 16px 18px; display: none; box-shadow: 0 8px 30px rgba(0,0,0,.6); font-size: 15px; z-index: 3; }
+  #tMsg b { display: block; font-size: 19px; margin-bottom: 6px; }
+  #screen #tMsg button { margin-top: 12px; min-width: 120px; }
+  #rTable { border-collapse: collapse; font-size: 13.5px; width: 100%; }
+  #rTable th { background: #1b232b; font-size: 12.5px; padding: 2px 5px; text-align: left; font-weight: 600; }
+  #rTable td { padding: 1px 5px; border-bottom: 1px solid #2c3842; height: 21px; }
+  #rTable td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  #rTable tr.flag td { color: #ff8a80; font-weight: bold; }
+  #rSummary { font-size: 11.5px; color: #c9d3da; white-space: pre-line; }
+  .simTag { position: absolute; right: 8px; bottom: 2px; font-size: 10px; color: #607080; letter-spacing: .08em; }
 
   /* --- the hardware capture button and status LED on the operator panel --- */
   #hwBox { display: flex; align-items: center; gap: 18px; }
-  #capBtn { flex: none; width: 92px; height: 92px; border-radius: 50%; border: 10px solid #cfd6db; background: radial-gradient(circle at 40% 35%, #66d17a, #1f7a35);
-            box-shadow: 0 6px 0 #145226, 0 8px 14px rgba(0,0,0,.25); cursor: pointer; color: #fff; font-weight: 800; font-size: 12px; }
+  #capBtn { flex: none; width: 84px; height: 84px; border-radius: 50%; border: 9px solid #cfd6db; background: radial-gradient(circle at 40% 35%, #66d17a, #1f7a35);
+            box-shadow: 0 6px 0 #145226, 0 8px 14px rgba(0,0,0,.25); cursor: pointer; color: #fff; font-weight: 800; font-size: 11.5px; }
   #capBtn:active { box-shadow: 0 1px 0 #145226, inset 0 4px 10px rgba(0,0,0,.5); transform: translateY(5px); }
   #led { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 5px solid #cfd6db; background: #1d3b26; }
   #led.on { background: radial-gradient(circle at 40% 35%, #b9ffcb, #22c55e); box-shadow: 0 0 16px #22c55e; }
-  #hwText { font-size: 13px; }
-  #hwText b { display: block; }
+  #hwText { font-size: 12.5px; }
+  #hwText b { display: block; font-size: 13.5px; }
 
   #loading { position: fixed; inset: 0; display: grid; place-items: center; font-size: 15px; color: var(--muted); z-index: 10; background: #e9eef2; }
   .label3d { position: fixed; z-index: 4; transform: translate(-50%, -100%); background: rgba(255,255,255,.88); border: 1px solid #c7d1d8;
              border-radius: 5px; padding: 2px 6px; font-size: 11.5px; white-space: nowrap; pointer-events: none; color: #22303a; }
   .label3d.dim { background: rgba(255,236,204,.92); border-color: #e5b56a; }
+  .label3d.pat { background: rgba(31,111,168,.92); color: #fff; border-color: #1f6fa8; font-weight: 700; }
 
   /* --- round push buttons for the simulation (not station controls) --- */
   #tools { position: fixed; left: 16px; bottom: 14px; z-index: 6; display: flex; align-items: flex-end; gap: 14px;
            background: rgba(255,255,255,.88); border: 1px solid var(--line); border-radius: 18px; padding: 10px 16px 6px;
-           box-shadow: 0 4px 16px rgba(0,0,0,.08); flex-wrap: wrap; max-width: calc(100% - 652px); }
+           box-shadow: 0 4px 16px rgba(0,0,0,.08); flex-wrap: wrap; max-width: calc(100% - 672px); }
   .pb { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); min-width: 52px; }
   .sep { width: 1px; align-self: stretch; background: var(--line); margin: 0 2px 16px; }
   .push { width: 52px; height: 52px; border-radius: 50%; cursor: pointer; padding: 0; color: #fff; font: 700 17px/1 system-ui, sans-serif;
           border: 5px solid #cfd6db; box-shadow: 0 4px 0 #8a969f, 0 6px 10px rgba(0,0,0,.18);
           transition: transform .06s, box-shadow .06s; display: grid; place-items: center; }
   .push span { text-shadow: 0 1px 1px rgba(0,0,0,.35); }
-  .push:active, .push.down { transform: translateY(4px); box-shadow: 0 0 0 #8a969f, inset 0 3px 8px rgba(0,0,0,.45); }
+  .push:active { transform: translateY(4px); box-shadow: 0 0 0 #8a969f, inset 0 3px 8px rgba(0,0,0,.45); }
   .push.green { background: radial-gradient(circle at 40% 35%, #66d17a, #1f7a35); }
   .push.red { background: radial-gradient(circle at 40% 35%, #ff7a7a, #a61b1b); }
   .push.grey { background: radial-gradient(circle at 40% 35%, #a9b4bc, #5b6770); font-size: 15px; }
   .push.blue { background: radial-gradient(circle at 40% 35%, #9fbfd6, #4f6f86); }
   .push.lit { border-color: #ffd34d; box-shadow: 0 4px 0 #8a969f, 0 0 12px rgba(255,211,77,.8); }
-  .push.grey.lit { background: radial-gradient(circle at 40% 35%, #7fc0f0, #1f6fa8); }
-  .push.blue.lit { background: radial-gradient(circle at 40% 35%, #7fc0f0, #1f6fa8); }
+  .push.grey.lit, .push.blue.lit { background: radial-gradient(circle at 40% 35%, #7fc0f0, #1f6fa8); }
   .push.grey span { font-size: 13px; }
   .push.recording { animation: blink 1s steps(2) infinite; border-color: #ff4d4d; }
   @keyframes blink { 50% { filter: brightness(1.6); } }
-  @media (max-width: 1000px) {
+  @media (max-width: 1050px) {
     #tools { max-width: calc(100% - 32px); bottom: calc(52vh + 10px); }
     #view { right: 0; bottom: 52vh; } #top { right: 0; } #side { top: 48vh; width: 100%; border-left: none; border-top: 1px solid var(--line); }
     .slider { grid-template-columns: 1fr; gap: 2px; }
+    .ctl { grid-template-columns: 1fr; }
+    #viewer .grid { grid-template-columns: 1fr; }
   }
 </style>
 <script type="importmap">
@@ -122,20 +165,19 @@
 <div id="view"></div>
 <div id="top">
   <div>
-    <h1>DFU Thermography Screening Station: operation</h1>
-    <div class="sub">EMX-2026-DFUSCAN-01 · IR thermography foot station · interactive simulation · <a id="back" href="index.html">&larr; all files</a></div>
+    <h1>DFU Station practice simulator</h1>
+    <div class="sub">EMX-2026-DFUSCAN-01 · hands-on training on the station and its app · <a id="back" href="index.html">&larr; all files</a></div>
   </div>
-  <div id="concept">Design geometry from the specification. Check against the built unit.</div>
+  <div id="concept">Practice only. Patients and temperatures are made up.</div>
 </div>
 
-<!-- simulation controls, as round push buttons on the 3D view -->
 <div id="tools">
   <div class="pb"><button id="bPlay" class="push green" title="Play / pause the simulation"><span id="iPlay">❚❚</span></button><span id="lPlay">Pause</span></div>
-  <div class="pb"><button id="bStop" class="push red" title="Stop the simulation and go back to the start"><span>■</span></button><span>Stop</span></div>
+  <div class="pb"><button id="bStop" class="push red" title="Restart the current practice patient"><span>■</span></button><span>Restart</span></div>
   <div class="sep"></div>
-  <div class="pb"><button class="push grey" data-speed="0.25" title="Quarter speed"><span>¼×</span></button><span>Slow</span></div>
-  <div class="pb"><button class="push grey" data-speed="0.5" title="Half speed"><span>½×</span></button><span>Half</span></div>
-  <div class="pb"><button class="push grey lit" data-speed="1" title="Real time"><span>1×</span></button><span>Real time</span></div>
+  <div class="pb"><button class="push grey" data-speed="0.5" title="Half speed"><span>½×</span></button><span>Slow</span></div>
+  <div class="pb"><button class="push grey lit" data-speed="1" title="Normal"><span>1×</span></button><span>Normal</span></div>
+  <div class="pb"><button class="push grey" data-speed="3" title="Fast forward"><span>3×</span></button><span>Fast</span></div>
   <div class="sep"></div>
   <div class="pb"><button id="bLabels" class="push blue lit" title="Show or hide the part labels"><span>Aa</span></button><span id="lLabels">Labels on</span></div>
   <div class="pb"><button id="bPanels" class="push blue" title="Show or hide the side panel and lid to see inside"><span>▣</span></button><span id="lPanels">Panels off</span></div>
@@ -146,76 +188,130 @@
 
 <aside id="side">
   <div class="card">
-    <h2>Operator touchscreen (as on the station)</h2>
+    <h2>1 · Practice patient</h2>
+    <div class="row">
+      <select id="caseSel"></select>
+      <button class="simbtn big on" id="caseStart">Start this patient</button>
+      <button class="simbtn" id="hint">What do I do next?</button>
+    </div>
+    <div id="caseBrief"></div>
+  </div>
+
+  <div class="card">
+    <h2>2 · Operator touchscreen (as on the station)</h2>
     <div id="screenWrap">
       <div id="screen">
         <div class="page show" id="pRef">
-          <div class="t-title">Enter the study reference code</div>
-          <div class="t-code" id="tCode">DFU-</div>
+          <div class="t-title">DEMO: Enter the study reference code</div>
+          <div class="t-code" id="tCode"></div>
           <div class="t-note">Use the code from the research team. Never enter a name.</div>
-          <div id="keys"></div>
-          <div class="hbox"><button id="kDel" style="flex:1">Delete</button><button id="kClr" style="flex:1">Clear</button>
+          <div class="t-info" id="tInfo"></div>
+          <div id="keys" style="display:flex;flex-direction:column;gap:4px"></div>
+          <div class="hbox"><button id="kExit" style="flex:1">Exit</button><button id="kDel" style="flex:1">Delete</button><button id="kClr" style="flex:1">Clear</button>
             <button id="kStart" class="primary" style="flex:2">Start rest period</button></div>
         </div>
         <div class="page" id="pPrep">
           <div class="hbox" style="flex:1">
             <div class="pics">
-              <div class="cap">Thermal view: place both soles inside</div><canvas id="cvT" width="330" height="200"></canvas>
-              <div class="cap">Colour view (unlit until capture)</div><canvas id="cvC" width="330" height="150"></canvas>
+              <div class="cap">Thermal view: place both soles inside</div><canvas id="cvT" width="400" height="300"></canvas>
+              <div class="cap">Colour view (unlit until capture)</div><canvas id="cvC" width="400" height="120"></canvas>
             </div>
             <div class="sidep">
-              <div class="t-title" id="tPatient">Patient</div>
+              <div class="t-title" id="tPatient">DEMO: Patient</div>
               <div class="t-note">Rest time remaining</div>
               <div id="tCountdown">15:00</div>
-              <div id="tAmbient">Room within 22–25 °C</div>
+              <div id="tAmbient"></div>
               <div id="tState"></div>
-              <button id="tCapture" class="primary">CAPTURE</button>
+              <button id="tCapture" class="grey">CAPTURE</button>
               <div class="hbox"><button id="tRestart" style="flex:1">Restart rest period</button><button id="tChange" style="flex:1">Change patient</button></div>
             </div>
           </div>
         </div>
         <div class="page" id="pSides">
           <div class="hbox" style="flex:1">
-            <div class="pics"><div class="cap">Thermal picture</div><canvas id="cvS" width="330" height="200"></canvas></div>
+            <div class="pics"><div class="cap">Thermal picture</div><canvas id="cvS" width="400" height="300"></canvas></div>
             <div class="sidep">
-              <div class="t-title">Which is the patient's LEFT foot?</div>
-              <div class="t-note">From the foot shapes, the station thinks foot A is the LEFT foot.</div>
-              <button id="sA" class="primary">Foot A is the LEFT foot</button>
+              <div class="t-title">DEMO: Which is the patient's LEFT foot?</div>
+              <div class="t-note" id="tProposal"></div>
+              <button id="sA">Foot A is the LEFT foot</button>
               <button id="sB">Foot B is the LEFT foot</button>
               <div class="t-note">Look at the patient, not the picture, before you answer.</div>
+              <div style="flex:1"></div>
               <button id="sRetake">Discard and scan again</button>
             </div>
           </div>
         </div>
         <div class="page" id="pRes">
-          <div class="t-title" id="rTitle">Patient: scan saved</div>
-          <table id="rTable"><thead><tr><th>Region</th><th>Left °C</th><th>Right °C</th><th>L minus R °C</th></tr></thead><tbody></tbody></table>
-          <div class="t-note" style="text-align:left">Simulation: no temperatures are measured, so the table is empty. On the station every region with a difference of 2.2 °C or more is flagged. The colour classifier shows a predicted class, never a grade.</div>
-          <div class="hbox" style="margin-top:auto"><button id="rAgain" style="flex:1">Scan again</button><button id="rNext" class="primary" style="flex:1">Next patient</button></div>
+          <div class="hbox" style="flex:1">
+            <div class="pics" style="width:300px"><canvas id="cvR" width="300" height="225"></canvas><canvas id="cvRC" width="200" height="150"></canvas></div>
+            <div class="sidep">
+              <div class="t-title" id="rTitle" style="font-size:17px">Scan saved</div>
+              <table id="rTable"><thead><tr><th>Region</th><th>Left °C</th><th>Right °C</th><th>L minus R °C</th></tr></thead><tbody></tbody></table>
+              <div id="rSummary"></div>
+              <div style="flex:1"></div>
+              <div class="hbox"><button id="rAgain" style="flex:1">Scan again</button><button id="rNext" class="primary" style="flex:1">Next patient</button></div>
+            </div>
+          </div>
         </div>
         <div id="tMsg"><b id="tMsgT"></b><span id="tMsgX"></span><br><button id="tMsgOk">OK</button></div>
-        <div class="simTag">SIMULATION</div>
+        <div class="simTag">PRACTICE SIMULATOR</div>
       </div>
     </div>
   </div>
 
   <div class="card">
-    <h2>Capture button and status LED (on the operator panel)</h2>
+    <h2>3 · Capture button and status LED (on the cabinet)</h2>
     <div id="hwBox">
-      <button id="capBtn" title="The physical capture button: same as CAPTURE on the screen">CAPTURE</button>
+      <button id="capBtn" title="The physical capture button: does the same as CAPTURE on the screen">CAPTURE</button>
       <div id="led"></div>
-      <div id="hwText"><b id="ledState">Status LED: off (idle)</b>Off: idle · slow blink: resting · steady: ready · fast blink: capturing · short flashes: error. You can also click the green button on the station.</div>
+      <div id="hwText"><b id="ledState">Status LED: off (idle)</b>Off: idle · slow blink: resting · steady: ready · fast blink: capturing · short flashes: error.</div>
     </div>
   </div>
 
   <div class="card">
+    <h2>4 · The room and the patient (what you do with your hands)</h2>
+    <div class="ctl">
+      <div class="tog" id="gSocks">Socks, shoes and dressings off <b></b></div>
+      <div class="tog" id="gView">Both soles inside the picture <b></b></div>
+      <div class="tog" id="gApart">Feet apart, not touching <b></b></div>
+      <div class="tog" id="gShroud">Blackout shroud closed <b></b></div>
+    </div>
+    <div id="room">
+      <span>Room</span><span id="roomT">23.4 °C</span>
+      <button class="simbtn" id="acCool">Air-con cooler</button><button class="simbtn" id="acWarm">Air-con warmer</button>
+      <span class="note" id="setp" style="margin:0"></span>
+    </div>
+    <div class="row" style="margin-top:8px"><button class="simbtn" id="lookPatient">Look at the patient</button>
+      <span class="note" style="margin:0">Shows the patient's left and right legs in the 3D view.</span></div>
+  </div>
+
+  <div class="card">
+    <h2>5 · Practice checklist</h2>
+    <ul id="checks"></ul>
+    <div id="score"></div>
+  </div>
+
+  <div class="card">
     <h2>What is happening</h2>
-    <div id="story">Type a reference code on the touchscreen and press "Start rest period".</div>
+    <div id="story"></div>
+  </div>
+
+  <div class="card">
+    <h2>6 · Scan records (the station's CSV file, practice copy)</h2>
+    <table id="recTable"><thead><tr><th>Time</th><th>Code</th><th>Room °C</th><th>Left foot</th><th>Sides</th><th>Max |ΔT|</th><th>Flagged</th></tr></thead><tbody></tbody></table>
+    <div class="note" id="recEmpty">No practice scans yet. Each saved scan appears here as a row of the CSV file.</div>
+    <div id="viewer">
+      <div class="grid">
+        <div><canvas id="cvRec" width="160" height="120"></canvas><div id="measure">Move over the thermal picture to measure the temperature at any point.</div></div>
+        <table id="recRegions"><thead><tr><th>Region</th><th>Left</th><th>Right</th><th>L − R</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+    <div class="row" style="margin-top:8px"><button class="simbtn" id="csvBtn">Download the CSV (practice)</button><button class="simbtn" id="csvClear">Clear practice records</button></div>
   </div>
 
   <div class="card">
     <h2>Selected part</h2>
-    <div id="part">Click any part of the station to see what it is, its drawing or BOM reference and what it does.</div>
+    <div id="part">Click any part of the station in the 3D view to see what it is and what it does.</div>
   </div>
 
   <div class="card">
@@ -229,17 +325,14 @@
       <button class="simbtn" data-view="bay">Electronics bay</button>
     </div>
     <div class="row" style="margin-top:8px">
-      <label class="chk"><input type="checkbox" id="cCurtain"> Curtain closed</label>
       <label class="chk"><input type="checkbox" id="cLid"> Service lid open</label>
       <label class="chk"><input type="checkbox" id="cFold"> Foot rest folded</label>
-      <label class="chk"><input type="checkbox" id="cFeet" checked> Feet in position</label>
       <label class="chk"><input type="checkbox" id="cFov" checked> Camera fields of view</label>
     </div>
     <div class="slider"><span>Aperture height <b id="hv">600 mm</b></span><input type="range" id="height" min="450" max="750" step="10" value="600"><span>450–750 mm</span></div>
     <div class="slider"><span>Exploded view <b id="ev">off</b></span><input type="range" id="explode" min="0" max="100" value="0"><span></span></div>
-    <div class="note">Play, pause, stop, the speed, the part labels and the side panels are the round buttons at the bottom of the 3D view.</div>
-    <div class="note">The 15-minute rest period runs 60 times faster here so the demonstration stays short; on the station it is the full 900 s and cannot be skipped. Untick "Feet in position" before CAPTURE to see how the station refuses a scan. The settle delay is the station's 2 s.</div>
-    <div class="note">Dimensions: sensor to sole 420 mm · cameras 40 mm apart · cabinet 500 × 750 × 400 mm (W × D × H) · front aperture 400 × 320 mm. Electronics positions are illustrative.</div>
+    <div class="note">The 15-minute rest runs 60 times faster here (15 s at normal speed). On the station it is the full 900 s and cannot be skipped. Headings start with "DEMO", as on a station running without real cameras: nothing here is a measurement.</div>
+    <div class="note">Dimensions: sensor to sole 420 mm · cameras 40 mm apart · cabinet 500 × 750 × 400 mm · front aperture 400 × 320 mm. Electronics positions are illustrative.</div>
   </div>
 </aside>
 
@@ -249,35 +342,62 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const $ = id => document.getElementById(id);
 const MM = 0.001;
-const W = 500, D = 750, H = 400, T = 6;
-const AP_W = 400, AP_H = 320, BAY = 50, WD = 420;
+const W = 500, D = 750, H = 400, T = 6, AP_W = 400, AP_H = 320, BAY = 50, WD = 420;
 const REAR_IN = -D / 2 + BAY, SOLE_Z = REAR_IN + 12 + WD, AP_CY = H / 2;
-const REST_S = 900, REST_RATE = 60, SETTLE_S = 2.0, CODE_DIGITS = 4;
+// station settings, as in config.example.yaml
+const REST_S = 900, REST_RATE = 60, SETTLE_S = 2.0, AMB_MIN = 22.0, AMB_MAX = 25.0, THRESH = 2.2;
+const CODE_RE = /^[A-Z]{2,5}-[0-9]{3,6}$/, CODE_MAX = 16;
+const KEY_ROWS = ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL-', 'ZXCVBNM_'];
+const REGIONS = ['hallux', 'lesser_toes', 'metatarsal_head_1', 'metatarsal_heads_central', 'metatarsal_head_5', 'medial_midfoot', 'lateral_midfoot', 'heel'];
+const RNAME = ['Hallux', 'Lesser toes', 'Metatarsal head 1', 'Central metatarsal heads', 'Metatarsal head 5', 'Medial midfoot', 'Lateral midfoot', 'Heel'];
+// region rectangles on a canonical LEFT sole, toes up: u 0 = medial -> 1 = lateral, v 0 = toe tip -> 1 = heel
+const RECT = [[0, 0, .35, .18], [.35, 0, 1, .18], [0, .18, .35, .38], [.35, .18, .7, .38], [.7, .18, 1, .38], [0, .38, .5, .7], [.5, .38, 1, .7], [0, .7, 1, 1]];
+const RESEARCH_NOTICE = 'Research instrument. These are measurements and a model output for the research team\'s study. They are not a clinical assessment.';
+const NO_MODEL = 'Colour model: not installed. This scan is stored for data collection.';
+
+// ---------- practice patients (made-up values) ----------
+const BASE = [29.8, 29.2, 30.6, 30.9, 30.4, 31.2, 30.5, 30.1];
+const plus = (a, b) => a.map((x, i) => +(x + b[i]).toFixed(2));
+const CASES = [
+  { name: '1 · Routine scan', brief: 'A routine practice patient. The room is fine and the patient is ready. Do every step in order: code, rest period, shroud, capture, left and right, results.',
+    L: BASE, R: plus(BASE, [0.3, -0.2, 0.4, -0.1, 0.2, -0.3, 0.1, 0.5]) },
+  { name: '2 · Warm area under the big-toe joint', brief: 'This practice patient has a warm area on one foot. Scan normally, then read the results table: which region is flagged, and on which foot?',
+    L: plus(BASE, [0.4, 0.1, 2.8, 1.1, 0, 0.2, 0, 0]), R: plus(BASE, [0.2, -0.1, 0.2, 0.1, 0.1, 0, 0.2, 0.1]) },
+  { name: '3 · Borderline difference', brief: 'Two regions differ by almost exactly 2.2 °C. The rule is "2.2 °C or more is flagged". Scan, then check which region gets FLAG and which does not.',
+    L: [29.9, 29.3, 30.7, 31.0, 32.59, 31.2, 30.6, 32.30], R: [29.7, 29.4, 30.5, 30.9, 30.40, 31.1, 30.4, 30.10], exact: true },
+  { name: '4 · Room too warm', brief: 'The air-con was switched off this morning. Read the room temperature on the screen before you scan, and fix the room (not the station).',
+    L: BASE, R: plus(BASE, [0.1, 0.3, -0.2, 0.2, -0.1, 0.1, 0.3, -0.2]), ambient: 25.8 },
+  { name: '5 · Patient not ready', brief: 'The patient has just sat down. Check the feet before you start the rest period: the rest only counts with the feet uncovered and in place.',
+    L: BASE, R: plus(BASE, [-0.2, 0.1, 0.3, 0, 0.2, -0.1, 0.1, 0.2]), socks: true, inView: false, apart: false },
+  { name: '6 · Patient moves during the rest', brief: 'A practice patient who may not keep still. Watch the thermal view during the rest period and react if something changes.',
+    L: BASE, R: plus(BASE, [0.2, 0.2, -0.1, 0.3, 0, 0.1, -0.2, 0.3]), moveAt: 0.45 },
+  { name: '7 · Station guesses left and right wrong', brief: 'The station suggests which foot is the left one from its shape. Here its guess is wrong. Look at the patient before you answer.',
+    L: plus(BASE, [0, 0, 0, 0, 0, 0, 0, 2.5]), R: BASE, guess: 'A' },
+  { name: '8 · Station cannot tell left from right', brief: 'The station cannot tell the feet apart from their shape. You must decide by looking at the patient.',
+    L: BASE, R: plus(BASE, [0.4, 0.1, 0.1, -0.3, 0.2, 0.2, 0.1, -0.1]), guess: null },
+];
 
 // ---------- renderer, scene, camera ----------
 const view = $('view');
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 view.appendChild(renderer.domElement);
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xe9eef2);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xe9eef2);
 const camera = new THREE.PerspectiveCamera(38, 1, 0.01, 20);
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
+const controls = new OrbitControls(camera, renderer.domElement); controls.enableDamping = true;
 scene.add(new THREE.HemisphereLight(0xffffff, 0x8a959e, 1.5));
 const sun = new THREE.DirectionalLight(0xffffff, 1.3); sun.position.set(1.5, 2.5, 2); scene.add(sun);
-const fill = new THREE.DirectionalLight(0xffffff, 0.5); fill.position.set(-2, 1, -1); scene.add(fill);
-const floor = new THREE.Mesh(new THREE.CircleGeometry(1.6, 48), new THREE.MeshStandardMaterial({ color: 0xd9e0e5, roughness: 1 }));
+const fillL = new THREE.DirectionalLight(0xffffff, 0.5); fillL.position.set(-2, 1, -1); scene.add(fillL);
+const floor = new THREE.Mesh(new THREE.CircleGeometry(1.8, 48), new THREE.MeshStandardMaterial({ color: 0xd9e0e5, roughness: 1 }));
 floor.rotation.x = -Math.PI / 2; floor.position.y = -0.001; scene.add(floor);
 
-// ---------- materials ----------
-const M = (o) => new THREE.MeshStandardMaterial(o);
+const M = o => new THREE.MeshStandardMaterial(o);
 const mat = {
   white: M({ color: 0xf2f4f5, roughness: 0.45 }), black: M({ color: 0x161616, roughness: 0.95 }),
   grey: M({ color: 0x77828c, roughness: 0.6, metalness: 0.3 }), steel: M({ color: 0xc8cdd2, roughness: 0.25, metalness: 0.9 }),
   vinyl: M({ color: 0x2a2f33, roughness: 0.7 }), curtain: M({ color: 0x2f5a35, roughness: 1, side: THREE.DoubleSide }),
   pcb: M({ color: 0x1f7a3a, roughness: 0.6 }), psu: M({ color: 0xeeeeee, roughness: 0.5 }), dark: M({ color: 0x222831, roughness: 0.5 }),
-  glass: M({ color: 0x0a0f14, roughness: 0.1 }), skin: M({ color: 0xd9a88a, roughness: 0.8 }), rubber: M({ color: 0x333333, roughness: 0.9 }),
+  glass: M({ color: 0x0a0f14, roughness: 0.1 }), rubber: M({ color: 0x333333, roughness: 0.9 }),
 };
 const ledMat = M({ color: 0xfff6e0, emissive: 0xfff2d0, emissiveIntensity: 0 });
 const statusMat = M({ color: 0x0c3a1c, emissive: 0x22ff66, emissiveIntensity: 0 });
@@ -285,25 +405,17 @@ const lensT = M({ color: 0x111111, emissive: 0xffffff, emissiveIntensity: 0, rou
 const sensorMat = M({ color: 0x1565c0, emissive: 0x42a5f5, emissiveIntensity: 0 });
 const btnMat = M({ color: 0x1f8a3a, emissive: 0x33ff77, emissiveIntensity: 0 });
 
-// ---------- helpers ----------
 const pickable = [], labels = [], explodable = [];
-function info(name, ref, text) { return { name, ref, text }; }
+const info = (name, ref, text) => ({ name, ref, text });
 function addMesh(m, inf, parent) { if (inf) { m.userData.info = inf; pickable.push(m); } parent.add(m); return m; }
-function box(w, h, d, material, x, y, z, inf, parent) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w * MM, h * MM, d * MM), material);
-  m.position.set(x * MM, y * MM, z * MM); return addMesh(m, inf, parent);
-}
-function cyl(r, len, material, inf, parent, seg = 24) {
-  return addMesh(new THREE.Mesh(new THREE.CylinderGeometry(r * MM, r * MM, len * MM, seg), material), inf, parent);
-}
+function box(w, h, d, material, x, y, z, inf, parent) { const m = new THREE.Mesh(new THREE.BoxGeometry(w * MM, h * MM, d * MM), material); m.position.set(x * MM, y * MM, z * MM); return addMesh(m, inf, parent); }
+function cyl(r, len, material, inf, parent, seg = 24) { return addMesh(new THREE.Mesh(new THREE.CylinderGeometry(r * MM, r * MM, len * MM, seg), material), inf, parent); }
 function wall(w, h, d, x, y, z, inward, inf, parent) {
   const faces = ['+x', '-x', '+y', '-y', '+z', '-z'].map(f => f === inward ? mat.black : mat.white);
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w * MM, h * MM, d * MM), faces);
-  m.position.set(x * MM, y * MM, z * MM); return addMesh(m, inf, parent);
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w * MM, h * MM, d * MM), faces); m.position.set(x * MM, y * MM, z * MM); return addMesh(m, inf, parent);
 }
-function label(text, obj, x = 0, y = 0, z = 0, dim = false) {
-  const el = document.createElement('div'); el.className = 'label3d' + (dim ? ' dim' : ''); el.textContent = text;
-  document.body.appendChild(el);
+function label(text, obj, x = 0, y = 0, z = 0, cls = '') {
+  const el = document.createElement('div'); el.className = 'label3d ' + cls; el.textContent = text; document.body.appendChild(el);
   labels.push({ el, obj, local: new THREE.Vector3(x * MM, y * MM, z * MM), pos: new THREE.Vector3() });
 }
 function explodes(obj, dx, dy, dz) { obj.userData.ex = new THREE.Vector3(dx * MM, dy * MM, dz * MM); explodable.push(obj); return obj; }
@@ -311,39 +423,39 @@ function placed(obj, x, y, z) { obj.position.set(x * MM, y * MM, z * MM); return
 
 const I = {
   cabinet: info('Cabinet', 'BOM D · E06 frame earth', 'GI sheet on a welded frame. The matte black interior blocks stray light and air movement.'),
-  front: info('Front wall and aperture', 'BOM D', 'Front aperture 400 × 320 mm. Feet enter heel first, soles facing the camera head.'),
+  front: info('Front wall and aperture', 'BOM D', 'Front aperture 400 × 320 mm. Feet enter heel first, soles facing the camera head, toes up.'),
   rear: info('Inner rear wall', 'BOM D', 'Carries the camera head. The electronics bay is behind it.'),
-  lid: info('Service lid', 'BOM D (piano hinge, cam latches)', 'Opens for access to the cameras and wiring.'),
-  head: info('Camera head plate', 'BOM B', 'Aluminium bracket on the rear wall. Both cameras sit 420 mm from the soles, 40 mm apart.'),
-  lepton: info('Thermal camera', 'G01 + G02 · BOM G', 'FLIR Lepton 3.5 (160 × 120, radiometric) on a PureThermal 3 over USB. Looks through an open port: glass and acrylic block long-wave IR.'),
-  rgb: info('Colour camera', 'G03 · BOM G', 'Raspberry Pi Camera Module 3 on CSI. Focus, exposure and white balance are locked.'),
-  led: info('Interior light', 'G06 · switched by Q1 on GPIO18', 'ON for the colour photo, OFF for 2 s before the thermal frame so the light does not warm the skin.'),
-  sht: info('Ambient sensor', 'F09 · SHT31, I²C 0x44', 'Room temperature and humidity. Captures outside 22–25 °C are refused.'),
-  screen: info('Touchscreen', 'F06 · 7-inch, DSI', 'Operator interface. The replica on the right uses the same screens and words as the station app.'),
-  button: info('Capture button', 'F07 · GPIO17', '22 mm momentary button. Same code path as CAPTURE on the screen. Click it to capture.'),
+  lid: info('Service lid', 'BOM D', 'Opens for access to the cameras and wiring.'),
+  head: info('Camera head plate', 'BOM B', 'Both cameras sit 420 mm from the soles, 40 mm apart.'),
+  lepton: info('Thermal camera', 'G01 + G02 · BOM G', 'FLIR Lepton 3.5 (160 × 120, radiometric) on a PureThermal 3 over USB. It clicks when it does its flat-field correction.'),
+  rgb: info('Colour camera', 'G03 · BOM G', 'Raspberry Pi Camera Module 3. Focus, exposure and white balance are locked.'),
+  led: info('Interior light', 'G06 · switched by Q1 on GPIO18', 'ON only for the colour picture, then OFF for 2 s before the thermal picture so it cannot warm the skin.'),
+  sht: info('Ambient sensor', 'F09 · SHT31', 'Room temperature and humidity. Scans outside 22–25 °C are refused.'),
+  screen: info('Touchscreen', 'F06 · 7-inch', 'The operator interface. The copy on the right works like the station app.'),
+  button: info('Capture button', 'F07 · GPIO17', 'Does the same as CAPTURE on the screen. Click it to capture.'),
   status: info('Status LED', 'F08 · GPIO27', 'Off: idle · slow blink: resting · steady: ready · fast blink: capturing · short flashes: error.'),
   pi: info('Raspberry Pi 5 + AI HAT+', 'F01 + F02 · BOM F', 'Main computer with the Hailo-8L accelerator. Runs fully offline.'),
   psu: info('Pi power supply', 'E01 · 27 W USB-C', 'Powers the Pi, cameras, touchscreen and sensors.'),
-  ledpsu: info('Light and fan supply', 'E02', 'Separate DC adapter for the interior light (through Q1) and the bay fan.'),
-  mosfet: info('Light switch MOSFET', 'Q1 · gate on GPIO18', 'Low-side switch for the interior light.'),
-  fan: info('Bay cooling fan', 'D05', '80 mm fan for the electronics bay.'),
-  inlet: info('AC inlet', 'E03 · IEC C14, fuse, rocker switch', 'Mains in. All metal parts are bonded to earth.'),
+  ledpsu: info('Light and fan supply', 'E02', 'Separate adapter for the interior light (through Q1) and the bay fan.'),
+  mosfet: info('Light switch MOSFET', 'Q1 · gate on GPIO18', 'Switches the interior light on and off.'),
+  fan: info('Bay cooling fan', 'D05', 'Cools the electronics bay.'),
+  inlet: info('AC inlet', 'E03', 'Mains in, with fuse and the ON/OFF rocker switch.'),
   strip: info('Internal outlet strip', 'E04', 'Feeds E01 and E02 inside the closed bay.'),
-  cushion: info('Heel and ankle support', 'BOM C', 'Padded vinyl cushion with heel notches, for repeatable foot placement.'),
-  platform: info('Foot rest platform', 'BOM A / C', 'Hinged platform with return springs; folds up for moving the station.'),
+  cushion: info('Heel and ankle support', 'BOM C', 'Rest the heels or ankles here so the legs are relaxed.'),
+  platform: info('Foot rest platform', 'BOM A / C', 'Hinged platform; folds up for moving the station.'),
   spring: info('Return spring', 'Foot rest', 'Holds the foot rest platform.'),
-  curtain: info('Blackout shroud', 'BOM D', 'Double-layer blackout curtain closes around the legs during a scan.'),
-  leg: info('Telescoping leg', 'BOM A', '40 × 40 mm sleeve, 35 × 35 mm inner post and locking pin. Sets the aperture height 450–750 mm.'),
-  castor: info('Lockable castor', 'BOM A', '75 mm swivel castor with brake.'),
+  curtain: info('Blackout shroud', 'BOM D', 'Close it around the legs before scanning: it keeps out light and draughts.'),
+  leg: info('Telescoping leg', 'BOM A', 'Sets the opening level with the patient\'s feet (450–750 mm).'),
+  castor: info('Lockable castor', 'BOM A', 'Lock the brakes before scanning.'),
   brace: info('Cross brace', 'BOM A', 'Stiffens the stand.'),
-  handle: info('Handle', 'BOM D', 'Stainless carry handle.'),
-  foot: info('Patient foot (illustration)', '—', 'Both soles must be in one thermal frame. Left and right are confirmed by the operator, not assumed from position.'),
+  handle: info('Handle', 'BOM D', 'Carry handle.'),
+  foot: info('Practice patient', '—', 'Feet go in heel first, soles to the cameras, toes up, apart, not touching the walls.'),
 };
 
 // ---------- stand ----------
 const stand = new THREE.Group(); scene.add(stand);
-const top = new THREE.Group(); scene.add(top);
-const cab = new THREE.Group(); top.add(cab);
+const topG = new THREE.Group(); scene.add(topG);
+const cab = new THREE.Group(); topG.add(cab);
 const LEG_X = 205, LEG_Z = 320, posts = [];
 for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
   const c = placed(new THREE.Group(), sx * LEG_X, 0, sz * LEG_Z); stand.add(c);
@@ -351,16 +463,11 @@ for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
   box(50, 10, 50, mat.grey, 0, 80, 0, I.castor, c);
   box(40, 130, 40, mat.grey, 0, 150, 0, I.leg, c);
   const pin = cyl(4, 60, mat.steel, I.leg, c, 12); pin.rotation.x = Math.PI / 2; pin.position.y = 195 * MM;
-  const p = box(35, 1, 35, mat.grey, sx * LEG_X, 0, sz * LEG_Z, I.leg, top); posts.push(p);
+  posts.push(box(35, 1, 35, mat.grey, sx * LEG_X, 0, sz * LEG_Z, I.leg, topG));
 }
-for (const s of [1, -1]) {
-  const b = box(30, 30, Math.hypot(2 * LEG_X, 2 * LEG_Z) - 40, mat.grey, 0, 120, 0, I.brace, stand);
-  b.rotation.y = s * Math.atan2(2 * LEG_X, 2 * LEG_Z);
-}
-box(2 * LEG_X + 40, 40, 40, mat.grey, 0, -20, LEG_Z, I.leg, top);
-box(2 * LEG_X + 40, 40, 40, mat.grey, 0, -20, -LEG_Z, I.leg, top);
-box(40, 40, 2 * LEG_Z, mat.grey, LEG_X, -20, 0, I.leg, top);
-box(40, 40, 2 * LEG_Z, mat.grey, -LEG_X, -20, 0, I.leg, top);
+for (const s of [1, -1]) { const b = box(30, 30, Math.hypot(2 * LEG_X, 2 * LEG_Z) - 40, mat.grey, 0, 120, 0, I.brace, stand); b.rotation.y = s * Math.atan2(2 * LEG_X, 2 * LEG_Z); }
+box(2 * LEG_X + 40, 40, 40, mat.grey, 0, -20, LEG_Z, I.leg, topG); box(2 * LEG_X + 40, 40, 40, mat.grey, 0, -20, -LEG_Z, I.leg, topG);
+box(40, 40, 2 * LEG_Z, mat.grey, LEG_X, -20, 0, I.leg, topG); box(40, 40, 2 * LEG_Z, mat.grey, -LEG_X, -20, 0, I.leg, topG);
 
 // ---------- cabinet ----------
 wall(W, T, D, 0, T / 2, 0, '+y', I.cabinet, cab);
@@ -379,8 +486,7 @@ const lid = wall(W + 10, T, D + 10, 0, T / 2, D / 2, '-y', I.lid, lidPivot);
 for (const s of [-1, 1]) {
   const h = explodes(new THREE.Group(), s * 180, 0, 0); cab.add(h);
   box(12, 30, 140, mat.steel, s * (W / 2 + 14), H - 40, 0, I.handle, h);
-  box(14, 30, 12, mat.steel, s * (W / 2 + 7), H - 40, 64, I.handle, h);
-  box(14, 30, 12, mat.steel, s * (W / 2 + 7), H - 40, -64, I.handle, h);
+  box(14, 30, 12, mat.steel, s * (W / 2 + 7), H - 40, 64, I.handle, h); box(14, 30, 12, mat.steel, s * (W / 2 + 7), H - 40, -64, I.handle, h);
 }
 
 // ---------- camera head ----------
@@ -393,12 +499,10 @@ const lc = cyl(4.5, 5, mat.glass, I.rgb, head); lc.rotation.x = Math.PI / 2; lc.
 for (const [w, h, x, y] of [[125, 8, 0, 62], [125, 8, 0, -62], [8, 125, 62, 0], [8, 125, -62, 0]]) box(w, h, 6, ledMat, x, y, 8, I.led, head);
 const interiorLight = new THREE.PointLight(0xfff1d6, 0, 1.2); interiorLight.position.set(0, 0, 0.08); head.add(interiorLight);
 label('Thermal camera', head, 20, 26, 20); label('Colour camera', head, -20, -20, 20); label('Interior light', head, 0, 80, 10);
-const sht = box(6, 20, 26, sensorMat, -W / 2 + T + 3, H - 70, D / 2 - 120, I.sht, cab);
-label('Ambient sensor', sht, 0, 16, 0);
+const sht = box(6, 20, 26, sensorMat, -W / 2 + T + 3, H - 70, D / 2 - 120, I.sht, cab); label('Ambient sensor', sht, 0, 16, 0);
 
 // ---------- operator panel ----------
-const panel = explodes(placed(new THREE.Group(), W / 2 + 32, H - 140, 20), 300, 0, 0); cab.add(panel);
-panel.rotation.z = 0.22;
+const panel = explodes(placed(new THREE.Group(), W / 2 + 32, H - 140, 20), 300, 0, 0); cab.add(panel); panel.rotation.z = 0.22;
 box(60, 170, 400, mat.white, 0, 0, 0, I.screen, panel);
 box(2, 92, 156, mat.glass, 31, 8, 40, I.screen, panel);
 const btn = cyl(11, 10, btnMat, I.button, panel); btn.rotation.z = Math.PI / 2; btn.position.set(33 * MM, 20 * MM, -125 * MM);
@@ -412,25 +516,18 @@ scrFace.rotation.y = Math.PI / 2; scrFace.position.set(32.2 * MM, 8 * MM, 40 * M
 // ---------- electronics bay ----------
 const bay = explodes(new THREE.Group(), 0, 0, -420); cab.add(bay);
 const bz = -D / 2 + T + 22;
-const pi = box(85, 56, 36, mat.pcb, -150, 150, bz, I.pi, bay);
-box(85, 56, 10, mat.dark, -150, 150, bz + 22, I.pi, bay);
-box(70, 40, 30, mat.psu, -40, 110, bz, I.psu, bay);
-box(70, 40, 30, mat.dark, 50, 110, bz, I.ledpsu, bay);
-box(20, 25, 10, mat.dark, 50, 190, bz + 6, I.mosfet, bay);
-box(220, 30, 30, mat.psu, -20, 40, bz, I.strip, bay);
-box(80, 80, 25, mat.dark, 160, 280, bz, I.fan, bay);
-box(45, 30, 20, mat.dark, 170, 80, -D / 2 - 6, I.inlet, bay);
-label('Pi 5 + AI HAT+ (Hailo-8L)', pi, 0, 40, 0); label('Electronics bay', bay, 0, 340, bz);
+const pi = box(85, 56, 36, mat.pcb, -150, 150, bz, I.pi, bay); box(85, 56, 10, mat.dark, -150, 150, bz + 22, I.pi, bay);
+box(70, 40, 30, mat.psu, -40, 110, bz, I.psu, bay); box(70, 40, 30, mat.dark, 50, 110, bz, I.ledpsu, bay);
+box(20, 25, 10, mat.dark, 50, 190, bz + 6, I.mosfet, bay); box(220, 30, 30, mat.psu, -20, 40, bz, I.strip, bay);
+box(80, 80, 25, mat.dark, 160, 280, bz, I.fan, bay); box(45, 30, 20, mat.dark, 170, 80, -D / 2 - 6, I.inlet, bay);
+label('Pi 5 + AI HAT+', pi, 0, 40, 0); label('Electronics bay', bay, 0, 340, bz);
 
 // ---------- foot rest ----------
 const rest = explodes(placed(new THREE.Group(), 0, fy0 - 8, D / 2), 0, 0, 320); cab.add(rest);
 box(420, 10, 260, mat.white, 0, -5, 130, I.platform, rest);
-box(110, 80, 200, mat.vinyl, -155, 40, 110, I.cushion, rest);
-box(110, 80, 200, mat.vinyl, 155, 40, 110, I.cushion, rest);
+box(110, 80, 200, mat.vinyl, -155, 40, 110, I.cushion, rest); box(110, 80, 200, mat.vinyl, 155, 40, 110, I.cushion, rest);
 box(90, 80, 200, mat.vinyl, 0, 40, 110, I.cushion, rest);
-box(90, 50, 200, mat.vinyl, -77, 25, 110, I.cushion, rest);
-box(90, 50, 200, mat.vinyl, 77, 25, 110, I.cushion, rest);
-label('Heel and ankle support', rest, 0, 90, 200);
+box(90, 50, 200, mat.vinyl, -77, 25, 110, I.cushion, rest); box(90, 50, 200, mat.vinyl, 77, 25, 110, I.cushion, rest);
 const springs = [-1, 1].map(s => { const sp = cyl(5, 100, mat.steel, I.spring, cab, 10); sp.userData.s = s; return sp; });
 
 // ---------- curtain ----------
@@ -441,21 +538,25 @@ const panes = [-1, 1].map(s => {
   for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin(p.getX(i) / MM / 270 * Math.PI * 9) * 9 * MM);
   g.computeVertexNormals();
   const holder = new THREE.Group(); holder.position.x = s * 255 * MM; curt.add(holder);
-  const m = addMesh(new THREE.Mesh(g, mat.curtain), I.curtain, holder); m.position.set(-s * 135 * MM, -165 * MM, 0);
+  addMesh(new THREE.Mesh(g, mat.curtain), I.curtain, holder).position.set(-s * 135 * MM, -165 * MM, 0);
   return holder;
 });
 label('Blackout shroud', curt, -200, 30, 0);
 
-// ---------- feet ----------
+// ---------- the practice patient's feet ----------
+// The cameras face the patient, so the patient's LEFT foot (x < 0 here) is on the RIGHT of the picture.
 const feet = new THREE.Group(); cab.add(feet);
-const footMats = [-1, 1].map(s => {
-  const fm = M({ color: 0xd9a88a, roughness: 0.8 });
-  const sole = addMesh(new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 40), fm), I.foot, feet);
-  sole.scale.set(48 * MM, 60 * MM, 125 * MM); sole.rotation.x = Math.PI / 2; sole.position.set(s * 85 * MM, 215 * MM, (SOLE_Z + 30) * MM);
-  const leg = cyl(42, 640, mat.skin, I.foot, feet); leg.rotation.x = Math.PI / 2; leg.position.set(s * 85 * MM, 160 * MM, (SOLE_Z + 380) * MM);
-  return fm;
-});
-label('Soles 420 mm from the cameras', feet, 0, 350, SOLE_Z, true);
+const footMats = [], footParts = [];
+for (const side of ['left', 'right']) {
+  const g = new THREE.Group(); feet.add(g);
+  const fm = M({ color: 0xd9a88a, roughness: 0.8 }); footMats.push(fm);
+  const sole = addMesh(new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 40), fm), I.foot, g);
+  sole.scale.set(48 * MM, 60 * MM, 125 * MM); sole.rotation.x = Math.PI / 2; sole.position.set(0, 215 * MM, (SOLE_Z + 30) * MM);
+  const leg = cyl(42, 640, fm, I.foot, g); leg.rotation.x = Math.PI / 2; leg.position.set(0, 160 * MM, (SOLE_Z + 380) * MM);
+  label(side === 'left' ? "Patient's LEFT" : "Patient's RIGHT", g, 0, 215, SOLE_Z + 560, 'pat');
+  footParts.push(g);
+}
+label('Soles 420 mm from the cameras', feet, 0, 350, SOLE_Z, 'dim');
 
 // ---------- fields of view ----------
 const fov = new THREE.Group(); cab.add(fov);
@@ -464,118 +565,401 @@ function frustum(hDeg, vDeg, x, color) {
   const o = new THREE.Vector3(x * MM, AP_CY * MM, (REAR_IN + 12) * MM);
   const c = [[-w, -h], [w, -h], [w, h], [-w, h]].map(([a, b]) => new THREE.Vector3((x + a) * MM, (AP_CY + b) * MM, SOLE_Z * MM));
   const pts = []; c.forEach((p, i) => pts.push(o, p, p, c[(i + 1) % 4]));
-  const lines = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color }));
-  const fillM = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
-  const fillMesh = new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([o, c[0], c[1], o, c[1], c[2], o, c[2], c[3], o, c[3], c[0]]), fillM);
-  fov.add(lines, fillMesh); return fillM;
+  fov.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color })));
+  const fm = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
+  fov.add(new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([o, c[0], c[1], o, c[1], c[2], o, c[2], c[3], o, c[3], c[0]]), fm));
+  return fm;
 }
 const thermalFill = frustum(57, 42.5, 20, 0xe65100), colourFill = frustum(66, 41, -20, 0x1e88e5);
 fov.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, (AP_CY - 175) * MM, (REAR_IN + 12) * MM), new THREE.Vector3(0, (AP_CY - 175) * MM, SOLE_Z * MM)]), new THREE.LineBasicMaterial({ color: 0xff9800 })));
-label('420 mm working distance', fov, 0, AP_CY - 175, (REAR_IN + SOLE_Z) / 2, true);
+label('420 mm working distance', fov, 0, AP_CY - 175, (REAR_IN + SOLE_Z) / 2, 'dim');
 
-// ---------- simulation state ----------
+// ======================================================================
+// Thermal and colour pictures (made-up practice data)
+// ======================================================================
+const TW = 160, TH = 120;
+function profile(v) {                       // half-width of a sole along its length, 0..1
+  if (v < 0) return 0; if (v > 1) return 0;
+  if (v < .1) return .6 + .4 * (v / .1);
+  if (v < .4) return 1;
+  if (v < .65) return 1 - .32 * ((v - .4) / .25);
+  if (v < .9) return .68 + .12 * ((v - .65) / .25);
+  return .8 * Math.sqrt(Math.max(0, 1 - ((v - .9) / .1) ** 2));
+}
+// Geometry of the two soles in the 160 x 120 thermal picture for the patient's current position.
+function geometry(P) {
+  const half = P.apart ? 29 : 17, top = P.inView ? 10 : -26;
+  return [{ side: 'right', cx: 80 - half, top }, { side: 'left', cx: 80 + half, top }];   // image left = patient's right
+}
+// Region map: for each pixel, -1 = background, else foot (0 image-left, 1 image-right) * 8 + region.
+function regionMap(P) {
+  const map = new Int16Array(TW * TH).fill(-1), FH = 100, FW = 21;
+  geometry(P).forEach((f, k) => {
+    for (let y = 0; y < TH; y++) {
+      const v = (y - f.top) / FH, hw = FW * profile(v);
+      if (hw <= 0) continue;
+      for (let x = Math.floor(f.cx - hw); x <= Math.ceil(f.cx + hw); x++) {
+        if (x < 0 || x >= TW || Math.abs(x - f.cx) > hw) continue;
+        const ui = (x - f.cx + hw) / (2 * hw);
+        // medial side faces the other foot: for the patient's left foot (image right) medial is its image-left edge
+        const u = f.side === 'left' ? ui : 1 - ui;
+        let r = RECT.findIndex(([u0, v0, u1, v1]) => u >= u0 && u <= u1 && v >= v0 && v <= v1);
+        if (r < 0) r = 7;
+        map[y * TW + x] = k * 8 + r;
+      }
+    }
+  });
+  return map;
+}
+let seed = 1;
+const rand = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+function thermalFrame(P, C, ambient, s) {
+  seed = s;
+  const map = regionMap(P), t = new Float32Array(TW * TH);
+  const geo = geometry(P);
+  for (let i = 0; i < t.length; i++) {
+    const m = map[i];
+    if (m < 0) { t[i] = ambient + 0.6 + (rand() - .5) * 0.15; continue; }
+    const k = m >> 3, r = m & 7, side = geo[k].side;
+    const mean = P.socks ? ambient + 1.6 : (side === 'left' ? C.L : C.R)[r];
+    t[i] = mean + (rand() - .5) * 0.5;
+  }
+  // smooth twice so regions blend like skin
+  for (let pass = 0; pass < 2; pass++) {
+    const o = Float32Array.from(t);
+    for (let y = 1; y < TH - 1; y++) for (let x = 1; x < TW - 1; x++) {
+      let sum = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) sum += o[(y + dy) * TW + x + dx];
+      t[y * TW + x] = sum / 9;
+    }
+  }
+  return { t, map };
+}
+const IRON = [[0, [0, 0, 16]], [.15, [32, 0, 74]], [.35, [122, 10, 140]], [.55, [214, 48, 74]], [.75, [248, 139, 29]], [.9, [255, 233, 92]], [1, [255, 255, 255]]];
+function iron(x) {
+  x = Math.min(1, Math.max(0, x));
+  for (let i = 1; i < IRON.length; i++) if (x <= IRON[i][0]) {
+    const [a, ca] = IRON[i - 1], [b, cb] = IRON[i], f = (x - a) / (b - a);
+    return ca.map((c, j) => c + (cb[j] - c) * f);
+  }
+  return IRON[IRON.length - 1][1];
+}
+function paintThermal(ctx, frame, ambient, opts = {}) {
+  const img = ctx.createImageData(TW, TH), lo = ambient - 0.5, hi = 35;
+  for (let i = 0; i < TW * TH; i++) {
+    const [r, g, b] = iron((frame.t[i] - lo) / (hi - lo)); img.data[i * 4] = r; img.data[i * 4 + 1] = g; img.data[i * 4 + 2] = b; img.data[i * 4 + 3] = 255;
+    if (opts.outline && frame.map[i] >= 0) {
+      const x = i % TW, m = frame.map[i];
+      if ((x < TW - 1 && frame.map[i + 1] !== m && frame.map[i + 1] >= 0) || (i + TW < TW * TH && frame.map[i + TW] !== m && frame.map[i + TW] >= 0)) {
+        img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = 235;
+      }
+    }
+  }
+  const tmp = document.createElement('canvas'); tmp.width = TW; tmp.height = TH; tmp.getContext('2d').putImageData(img, 0, 0);
+  ctx.imageSmoothingEnabled = false; ctx.drawImage(tmp, 0, 0, ctx.canvas.width, ctx.canvas.height);
+}
+function paintColour(ctx, P, lit) {
+  const w = ctx.canvas.width, h = ctx.canvas.height;
+  ctx.fillStyle = lit ? '#2a2826' : '#050505'; ctx.fillRect(0, 0, w, h);
+  if (!lit) return;
+  const map = regionMap(P), img = ctx.getImageData(0, 0, w, h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const m = map[Math.floor(y / h * TH) * TW + Math.floor(x / w * TW)];
+    if (m < 0) continue;
+    const j = (y * w + x) * 4, shade = 0.85 + 0.15 * Math.sin(x * 0.2) * Math.cos(y * 0.15);
+    const c = P.socks ? [40, 52, 90] : [222, 172, 142];
+    img.data[j] = c[0] * shade; img.data[j + 1] = c[1] * shade; img.data[j + 2] = c[2] * shade;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function markAB(ctx, frame, letters) {
+  const geo = [[0, 0], [0, 0]], n = [0, 0];
+  for (let i = 0; i < frame.map.length; i++) if (frame.map[i] >= 0) { const k = frame.map[i] >> 3; geo[k][0] += i % TW; geo[k][1] += Math.floor(i / TW); n[k]++; }
+  const sx = ctx.canvas.width / TW, sy = ctx.canvas.height / TH;
+  ctx.font = `bold ${Math.round(14 * sx / 2.5)}px sans-serif`; ctx.textAlign = 'center';
+  [0, 1].forEach(k => { if (!n[k]) return; const x = geo[k][0] / n[k] * sx; ctx.fillStyle = '#000a'; ctx.fillRect(x - 14, 4, 28, 26); ctx.fillStyle = '#fff'; ctx.fillText(letters[k], x, 24); });
+  ctx.textAlign = 'left';
+}
+
+// ======================================================================
+// Practice state
+// ======================================================================
 const S = { clock: 0, speed: 1, paused: false, labels: true, panels: false, page: 'pRef', code: '',
-            restStart: null, cap: null, phase: 'idle', error: 0, held: 0,
-            height: 600, explode: 0, lid: 0, lidT: 0, fold: 0, foldT: 0, curtain: 0, curtainT: 0 };
+            restStart: null, cap: null, phase: 'idle', error: 0, held: 0, caseI: 0, frame: null, captured: null, preview: null, lastPrev: -1,
+            ambient: 23.4, setpoint: 23.4, height: 600, explode: 0, lid: 0, lidT: 0, fold: 0, foldT: 0, curtain: 0, curtainT: 0, moved: false };
+const P = { socks: false, inView: true, apart: true, shroud: false };
+const C = () => CASES[S.caseI];
+let TR = null;     // practice checklist for the current patient
+const records = [];
 const SEQ = [['ambient', 1.0], ['gate', 0.8], ['ffc', 1.6], ['colour', 1.4], ['settle', SETTLE_S], ['thermal', 1.0], ['analyse', 1.2]];
 const STORY = {
-  ref: 'Type a reference code on the touchscreen and press "Start rest period". The station stores only this code, never a name.',
-  rest: 'Rest period: the patient\'s bare feet rest for 15 minutes so they settle to the room. The station refuses to capture until the timer reaches zero (run 60× faster here). Status LED: slow blink.',
-  ready: 'Ready. Press CAPTURE on the screen or the green button on the panel. The curtain closes around the legs. Status LED: steady.',
-  ambient: 'Checking the room: the ambient sensor must read 22–25 °C, or the scan is refused.',
-  gate: 'Checking the rest period has been completed.',
-  ffc: 'The thermal camera closes its shutter for a flat-field correction. The station waits for it to finish; no frame is taken during it.',
-  colour: 'Interior light ON. The colour camera takes one frame with locked focus, exposure and white balance.',
-  settle: 'Interior light OFF. The station waits 2 s so the light cannot warm the skin before the thermal frame.',
-  thermal: 'The thermal camera takes the raw Y16 frame: every pixel is a real temperature. Both feet are in this one frame.',
-  analyse: 'The colour frame is mapped onto the thermal frame and both soles are outlined.',
-  sides: 'The station proposes which foot is the left one from its shape. The operator confirms by looking at the patient, not the picture.',
-  saved: 'Saved: one paired record (colour image, raw thermal array, temperatures, ambient reading, times, settings) and one CSV row, all on the station. Regions differing by 2.2 °C or more are flagged; the classifier shows a predicted class, never a grade.',
-  refused: 'Refused: the station found fewer than two feet. Nothing is saved for a refused scan, and a refusal cannot be overridden.',
+  ref: 'Start: type the reference code exactly as the research team gave it, for example DFU-0001, and tap "Start rest period". Never type a name.',
+  rest: 'Rest period: the bare feet rest for 15 minutes so they settle to the room. Use this time to check the thermal view: both whole soles inside, apart. Status LED: slow blink.',
+  ready: 'Ready to scan. Close the shroud, ask the patient to keep still, then press CAPTURE on the screen or the green button on the cabinet.',
+  ambient: 'Capturing: checking the room is 22–25 °C.',
+  gate: 'Checking the 15-minute rest period is complete.',
+  ffc: 'The thermal camera clicks: it closes its shutter to correct itself. No picture is taken during this.',
+  colour: 'The inside light comes ON and the colour picture is taken.',
+  settle: 'The light goes OFF. The station waits 2 s so the light cannot warm the skin.',
+  thermal: 'The thermal picture is taken: every pixel is a temperature. Do not open the shroud or move the feet.',
+  analyse: 'The station outlines both soles and lines the colour picture up with the thermal one.',
+  sides: 'Which is the patient\'s LEFT foot? Look at the patient (button "Look at the patient"), not just the picture. Normally the patient\'s left foot is on the RIGHT of the picture, because the cameras face the patient.',
+  saved: 'The scan is saved: pictures, temperatures, room reading and one row in the CSV file (see Scan records). Read the table: FLAG marks every region where the feet differ by 2.2 °C or more. Then tap "Next patient".',
 };
-function story(k) { $('story').textContent = STORY[k]; }
-function restRemaining() { return S.restStart == null ? REST_S : Math.max(0, REST_S - (S.clock - S.restStart) * REST_RATE); }
-function capturing() { return S.cap != null; }
+const story = k => { $('story').textContent = STORY[k] || k; };
+const restRemaining = () => S.restStart == null ? REST_S : Math.max(0, REST_S - (S.clock - S.restStart) * REST_RATE);
+const capturing = () => S.cap != null;
+const ambientOk = () => S.ambient >= AMB_MIN && S.ambient <= AMB_MAX;
 
-// ---------- touchscreen ----------
+// ---------- practice checklist ----------
+const CHECKS = [
+  ['room', 'Room checked: 22–25 °C before scanning'],
+  ['code', 'Reference code entered, never a name'],
+  ['bare', 'Feet uncovered before the rest period started'],
+  ['place', 'Both soles inside the picture and apart'],
+  ['rest', 'Full rest period with the feet still'],
+  ['shroud', 'Shroud closed for the scan'],
+  ['sides', 'Left and right confirmed by looking at the patient'],
+  ['done', 'Results read, then "Next patient"'],
+];
+function newChecklist() { TR = {}; CHECKS.forEach(([k]) => TR[k] = { s: '', why: '' }); drawChecks(); }
+function mark(k, ok, why = '') { if (TR[k].s === 'bad' && ok) return; TR[k] = { s: ok ? 'ok' : 'bad', why }; drawChecks(); }
+function drawChecks() {
+  $('checks').innerHTML = CHECKS.map(([k, t]) => `<li class="${TR[k].s}"><i>${TR[k].s === 'ok' ? '✓' : TR[k].s === 'bad' ? '✗' : '•'}</i><span>${t}${TR[k].why ? `<small>${TR[k].why}</small>` : ''}</span></li>`).join('');
+  const done = CHECKS.filter(([k]) => TR[k].s).length, ok = CHECKS.filter(([k]) => TR[k].s === 'ok').length;
+  $('score').textContent = TR.done.s ? `Practice result: ${ok} of ${CHECKS.length} steps right.${ok === CHECKS.length ? ' Well done.' : ' Try this patient again to get them all.'}` : (done ? `${ok} of ${done} steps right so far.` : '');
+}
+
+// ---------- start a practice patient ----------
+CASES.forEach((c, i) => { const o = document.createElement('option'); o.value = i; o.textContent = c.name; $('caseSel').appendChild(o); });
+$('caseSel').onchange = () => { $('caseBrief').textContent = CASES[+$('caseSel').value].brief; };
+$('caseStart').onclick = () => startCase(+$('caseSel').value);
+function startCase(i) {
+  S.caseI = i; const c = C();
+  $('caseSel').value = i; $('caseBrief').textContent = c.brief;
+  S.ambient = S.setpoint = c.ambient ?? 23.4; S.moved = false; S.didMove = false;
+  P.socks = !!c.socks; P.inView = c.inView ?? true; P.apart = c.apart ?? true; P.shroud = false; S.curtainT = 0;
+  resetPatient(); newChecklist(); drawToggles();
+  $('tMsg').style.display = 'none'; S.error = 0;
+}
+
+// ---------- hint: the next step, from the operator manual ----------
+$('hint').onclick = () => {
+  let h;
+  if ($('tMsg').style.display === 'block') h = 'Read the message on the touchscreen, fix what it says, then tap OK.';
+  else if (S.page === 'pRef') h = (P.socks || !P.inView || !P.apart) ? 'First get the patient ready (card 4): socks and dressings off, both whole soles inside the opening, feet apart. Then type the code.' : 'Type the study code on the touchscreen keys, e.g. DFU-0001, then tap "Start rest period".';
+  else if (S.page === 'pPrep') {
+    if (capturing()) h = 'Wait. Keep the shroud closed and the feet still until the next screen appears.';
+    else if (!ambientOk()) h = `The room reads ${S.ambient.toFixed(1)} °C. Use the air-con buttons (card 4) and wait until it is between 22 and 25 °C.`;
+    else if (P.socks || !P.inView || !P.apart) h = 'Look at the thermal view on the screen: fix the feet in card 4, then tap "Restart rest period" so the full rest is counted.';
+    else if (S.moved || S.restCovered) h = 'The feet were moved or covered after the rest started. Tap "Restart rest period".';
+    else if (restRemaining() > 0) h = 'Wait for the rest countdown to reach 00:00. Meanwhile close the blackout shroud (card 4).';
+    else if (!P.shroud) h = 'Close the blackout shroud (card 4), then press CAPTURE.';
+    else h = 'Press CAPTURE on the screen or the green button on the cabinet.';
+  } else if (S.page === 'pSides') h = "Tap 'Look at the patient' (card 4) to see which leg is the patient's left, then tap the matching button. The patient's left foot is normally on the RIGHT of the picture.";
+  else h = 'Read the results table: any FLAG? Then look at Scan records (card 6) and tap "Next patient".';
+  $('story').textContent = 'Next step: ' + h;
+};
+
+// ---------- touchscreen: code page ----------
 const pages = ['pRef', 'pPrep', 'pSides', 'pRes'];
 function show(p) { S.page = p; pages.forEach(x => $(x).classList.toggle('show', x === p)); }
-'1234567890'.split('').forEach(d => {
-  const b = document.createElement('button'); b.textContent = d; $('keys').appendChild(b);
-  b.onclick = () => { if (S.code.length < CODE_DIGITS) { S.code += d; refreshCode(); } };
+KEY_ROWS.forEach(row => {
+  const line = document.createElement('div'); line.className = 'krow';
+  for (const ch of row) { const b = document.createElement('button'); b.textContent = ch; b.onclick = () => { if (S.code.length < CODE_MAX) { S.code += ch; refreshCode(); } }; line.appendChild(b); }
+  $('keys').appendChild(line);
 });
-function refreshCode() { $('tCode').textContent = 'DFU-' + S.code; $('kStart').disabled = S.code.length !== CODE_DIGITS; }
+function refreshCode() { $('tCode').textContent = S.code || ' '; }
+function stationInfo() {
+  const d = new Date(), p = n => String(n).padStart(2, '0');
+  $('tInfo').textContent = `Station clock ${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())} · Storage free 52.3 GB\nData collection: no colour model`;
+}
+$('kExit').onclick = () => message('Exit', 'On the station, Exit closes the app. In this practice it does nothing.', true);
 $('kDel').onclick = () => { S.code = S.code.slice(0, -1); refreshCode(); };
 $('kClr').onclick = () => { S.code = ''; refreshCode(); };
-$('kStart').onclick = () => { S.restStart = S.clock; $('tPatient').textContent = 'Patient DFU-' + S.code; show('pPrep'); story('rest'); };
-$('tRestart').onclick = () => { if (!capturing()) { S.restStart = S.clock; story('rest'); } };
+function codeProblem(code) {
+  if (!code) return 'empty';
+  if (code.length > CODE_MAX) return 'too long';
+  if (!/\d/.test(code)) return 'no digits: looks like a name';
+  if ((code.match(/[A-Za-z]+/g) || []).some(r => r.length > 5)) return 'long run of letters: looks like a name';
+  if (!CODE_RE.test(code)) return 'wrong format';
+  return null;
+}
+$('kStart').onclick = () => {
+  const why = codeProblem(S.code);
+  if (why) {
+    mark('code', false, why.includes('name') ? 'That looked like a name. Use only the study code.' : 'Type the code exactly, e.g. DFU-0001.');
+    message('Reference code not accepted', 'Enter the study reference code exactly as given by the research team, for example DFU-0001. Never enter the patient\'s name.');
+    return;
+  }
+  mark('code', true);
+  S.restStart = S.clock; S.moved = false;
+  mark('bare', !P.socks, P.socks ? 'The rest period started with socks on, so it does not count. Restart it after taking them off.' : '');
+  S.restCovered = P.socks;
+  $('tPatient').textContent = 'DEMO: Patient ' + S.code; show('pPrep'); story('rest');
+};
+
+// ---------- touchscreen: prepare page ----------
+$('tRestart').onclick = () => {
+  if (capturing()) return;
+  S.restStart = S.clock; S.moved = false; S.restCovered = P.socks;
+  if (!P.socks && TR.bare.s === 'bad') { TR.bare = { s: 'ok', why: '' }; drawChecks(); }
+  story('rest');
+};
 $('tChange').onclick = () => { if (!capturing()) resetPatient(); };
 $('tCapture').onclick = () => capture();
 $('capBtn').onclick = () => capture();
-$('sA').onclick = $('sB').onclick = () => finish();
-$('sRetake').onclick = () => { S.held = 0; show('pPrep'); story('ready'); S.phase = 'idle'; };
-$('rAgain').onclick = () => { S.held = 0; show('pPrep'); S.phase = 'idle'; story('ready'); };
-$('rNext').onclick = () => resetPatient();
+function resetPatient() {
+  S.code = ''; refreshCode(); S.restStart = null; S.cap = null; S.phase = 'idle'; S.held = 0; S.captured = null; S.restCovered = false;
+  show('pRef'); story('ref'); stationInfo();
+}
+function message(title, text, plain) {
+  $('tMsgT').textContent = title; $('tMsgX').textContent = text; $('tMsg').style.display = 'block';
+  $('tMsgT').style.color = plain ? '#1d2730' : '#c62828'; S.error = plain ? 0 : 1;
+}
 $('tMsgOk').onclick = () => { $('tMsg').style.display = 'none'; S.error = 0; };
-function message(title, text) { $('tMsgT').textContent = title; $('tMsgX').textContent = text; $('tMsg').style.display = 'block'; S.error = 1; }
-function resetPatient() { S.code = ''; refreshCode(); S.restStart = null; S.cap = null; S.phase = 'idle'; S.held = 0; show('pRef'); story('ref'); }
 function capture() {
-  if (S.page !== 'pPrep' || capturing() || S.error) return;
-  const left = Math.ceil(restRemaining());
-  if (left > 0) {
-    const m = Math.floor(left / 60), s = left % 60;
-    message('Rest period not finished', `The patient's feet must rest uncovered before scanning. ${m ? m + ' min' : ''}${m && s ? ' ' : ''}${s ? s + ' s' : ''} to go.`);
-    return;
-  }
+  if (S.page !== 'pPrep' || capturing() || $('tMsg').style.display === 'block') return;
   S.cap = { start: S.clock }; S.held = 0;
-  if (!S.curtainT) { S.curtainT = 1; $('cCurtain').checked = true; }
 }
-function finish() {
-  show('pRes'); story('saved'); S.phase = 'saved'; S.held = 1;
-  $('rTitle').textContent = `Patient DFU-${S.code}: scan saved`;
-  $('rTable').tBodies[0].innerHTML = ['Hallux', 'Lesser toes', 'Metatarsal head 1', 'Central metatarsal heads', 'Metatarsal head 5', 'Medial midfoot', 'Lateral midfoot', 'Heel']
-    .map(r => `<tr><td>${r}</td><td>—</td><td>—</td><td>—</td></tr>`).join('');
+function refuse(title, text, k, why) {
+  S.cap = null; S.phase = 'idle'; message(title, text);
+  if (k) mark(k, false, why);
+  $('story').textContent = 'The station refused the scan. Nothing was saved. Fix the cause, then press CAPTURE again.';
 }
-refreshCode();
 
-// pictures on the touchscreen (drawn, not measured)
-function drawFeet(ctx, w, h, mode) {
-  ctx.fillStyle = mode === 'unlit' ? '#0b0d0f' : '#11171b'; ctx.fillRect(0, 0, w, h);
-  if (!feet.visible) return;
-  [w * 0.36, w * 0.64].forEach((x, i) => {
-    let g;
-    if (mode === 'thermal' || mode === 'sides') { g = ctx.createRadialGradient(x, h * 0.55, 4, x, h * 0.5, h * 0.42); g.addColorStop(0, '#ffe95c'); g.addColorStop(0.5, '#e8603a'); g.addColorStop(1, '#5a1070'); }
-    else g = mode === 'lit' ? '#d9a88a' : '#2a2420';
-    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, h * 0.52, w * 0.09, h * 0.4, 0, 0, Math.PI * 2); ctx.fill();
-    if (mode === 'sides') { ctx.fillStyle = '#fff'; ctx.font = 'bold 20px sans-serif'; ctx.fillText(i ? 'B' : 'A', x - 7, 22); }
-  });
-  ctx.fillStyle = '#78909c'; ctx.font = '10px sans-serif'; ctx.fillText('simulated picture, no temperatures', 6, h - 6);
+// ---------- touchscreen: left and right ----------
+function proposalText() {
+  const g = 'guess' in C() ? C().guess : 'B';
+  return g == null ? 'The station could not tell from the foot shapes.' : `From the foot shapes, the station thinks foot ${g} is the left foot. Confirm or correct it.`;
 }
+$('sA').onclick = () => finish('A');
+$('sB').onclick = () => finish('B');
+$('sRetake').onclick = () => { S.held = 0; S.captured = null; show('pPrep'); story('ready'); S.phase = 'idle'; };
+
+// ---------- results and the record ----------
+function finish(choice) {
+  if (S.page !== 'pSides' || !S.captured) return;
+  const c = C(), g = 'guess' in c ? c.guess : 'B';
+  const leftIsImageLeft = choice === 'A';
+  const correct = choice === 'B';          // the patient's left foot is on the right of the picture
+  mark('sides', correct, correct ? '' : 'Wrong foot. The patient\'s left foot is on the right of the picture (foot B). Left and right are now swapped in this record.');
+  const source = (g != null && g === choice) ? 'geometry_confirmed' : 'operator_override';
+  // values as the station would compute them, with tiny noise unless the case needs exact numbers
+  seed = 7 + S.caseI; const jit = () => c.exact ? 0 : Math.round((rand() - .5) * 8) / 100;
+  const trueL = c.L.map(v => +(v + jit()).toFixed(2)), trueR = c.R.map(v => +(v + jit()).toFixed(2));
+  const Lv = correct ? trueL : trueR, Rv = correct ? trueR : trueL;
+  const rows = REGIONS.map((r, i) => {
+    const d = Math.round((Lv[i] - Rv[i]) * 100) / 100;
+    return { r, name: RNAME[i], L: Lv[i], R: Rv[i], d, flag: Math.abs(d) >= THRESH };
+  });
+  const flagged = rows.filter(x => x.flag), maxd = Math.max(...rows.map(x => Math.abs(x.d)));
+  const fl = flagged.length === 0 ? `No region reached the ${THRESH.toFixed(1)} C left-right difference threshold.`
+    : `${flagged.length} ${flagged.length === 1 ? 'region' : 'regions'} at or above the ${THRESH.toFixed(1)} C left-right difference threshold: ${flagged.map(x => x.r.replace(/_/g, ' ')).join(', ')}.`;
+  const summary = [fl, `Largest left-right difference: ${maxd.toFixed(2)} C.`, NO_MODEL, RESEARCH_NOTICE];
+  const now = new Date(), iso = d => d.toISOString().replace('Z', '+00:00');
+  const rec = {
+    reference_code: S.code, session_id: 'practice-' + iso(now).slice(0, 10), scan_id: `${iso(now).slice(0, 19).replace(/[-:]/g, '')}-${String(records.length + 1).padStart(3, '0')}`,
+    triggered_at_utc: iso(S.captured.trig), color_captured_at_utc: iso(S.captured.col), thermal_captured_at_utc: iso(S.captured.th),
+    ambient_temp_c: S.captured.amb.toFixed(2), ambient_humidity_pct: S.captured.hum.toFixed(1), config_hash: 'practice', software_version: 'practice-simulator',
+    left_foot_position: leftIsImageLeft ? 'image_left' : 'image_right', sidedness_source: source, asymmetry_threshold_c: THRESH.toFixed(2),
+    max_abs_delta_c: maxd.toFixed(4), any_region_flagged: flagged.length ? '1' : '0', flagged_regions: flagged.map(x => x.r).join(';'),
+    predicted_class: '', predicted_label: '', confidence: '', model_id: '', registration_error_px: '0.8000', color_coverage_fraction: '0.9800',
+    scan_folder: 'data/scans/' + S.code + '/practice', rows, summary, frame: S.captured.frame, P: { ...S.captured.P }, leftIsImageLeft,
+  };
+  records.push(rec); drawRecords(); selectRecord(records.length - 1);
+  show('pRes'); story('saved'); S.phase = 'saved'; S.held = 1;
+  $('rTitle').textContent = `DEMO: Patient ${S.code}: scan saved`;
+  $('rTable').tBodies[0].innerHTML = rows.map(x => `<tr class="${x.flag ? 'flag' : ''}"><td>${x.name}</td><td class="n">${x.L.toFixed(2)}</td><td class="n">${x.R.toFixed(2)}</td><td class="n">${(x.d > 0 ? '+' : '') + x.d.toFixed(2)}${x.flag ? '  FLAG' : ''}</td></tr>`).join('');
+  $('rSummary').textContent = summary.join('\n');
+  const ctx = $('cvR').getContext('2d'); paintThermal(ctx, rec.frame, S.captured.amb, { outline: true });
+  markAB(ctx, rec.frame, leftIsImageLeft ? ['L', 'R'] : ['R', 'L']);
+  paintColour($('cvRC').getContext('2d'), rec.P, true);
+}
+$('rAgain').onclick = () => { S.held = 0; S.captured = null; show('pPrep'); S.phase = 'idle'; story('ready'); };
+$('rNext').onclick = () => {
+  if (S.page === 'pRes') mark('done', true);
+  CHECKS.forEach(([k]) => { if (!TR[k].s) mark(k, false, 'Not done.'); });
+  const keep = S.caseI; resetPatient(); S.caseI = keep;
+  $('story').textContent = $('score').textContent + ' Choose the next practice patient above, or start this one again.';
+};
+
+// ---------- the room and the patient ----------
+function drawToggles() {
+  const set = (id, on, txtOn, txtOff, bad) => { const e = $(id); e.classList.toggle('on', on); e.classList.toggle('warn', !on && bad); e.querySelector('b').textContent = on ? txtOn : txtOff; };
+  set('gSocks', !P.socks, 'yes', 'socks on', true);
+  set('gView', P.inView, 'yes', 'toes cut off', true);
+  set('gApart', P.apart, 'yes', 'touching', true);
+  set('gShroud', P.shroud, 'closed', 'open', true);
+  S.curtainT = P.shroud ? 1 : 0;
+}
+function patientChanged() {   // moving or covering the feet after the rest started means the rest no longer counts
+  if (S.restStart != null && S.page === 'pPrep' && !capturing()) S.moved = true;
+}
+$('gSocks').onclick = () => { if (capturing()) return; P.socks = !P.socks; patientChanged(); drawToggles(); };
+$('gView').onclick = () => { if (capturing()) return; P.inView = !P.inView; patientChanged(); drawToggles(); };
+$('gApart').onclick = () => { if (capturing()) return; P.apart = !P.apart; patientChanged(); drawToggles(); };
+$('gShroud').onclick = () => { if (capturing()) { $('story').textContent = 'Do not open the shroud or move the feet until the next screen appears.'; return; } P.shroud = !P.shroud; drawToggles(); };
+$('acCool').onclick = () => { S.setpoint = Math.max(20, +(S.setpoint - 0.5).toFixed(1)); };
+$('acWarm').onclick = () => { S.setpoint = Math.min(28, +(S.setpoint + 0.5).toFixed(1)); };
+$('lookPatient').onclick = () => setView('patient');
+
+// ---------- records ----------
+const CSV_COLS = ['reference_code', 'session_id', 'scan_id', 'triggered_at_utc', 'color_captured_at_utc', 'thermal_captured_at_utc', 'ambient_temp_c', 'ambient_humidity_pct',
+  'config_hash', 'software_version', 'left_foot_position', 'sidedness_source', 'asymmetry_threshold_c',
+  ...REGIONS.flatMap(r => ['left_mean_c', 'right_mean_c', 'delta_c', 'flagged'].map(n => `${r}_${n}`)),
+  'max_abs_delta_c', 'any_region_flagged', 'flagged_regions', 'predicted_class', 'predicted_label', 'confidence', 'model_id', 'registration_error_px', 'color_coverage_fraction', 'scan_folder'];
+function csvRow(rec) {
+  const v = { ...rec };
+  rec.rows.forEach(x => { v[`${x.r}_left_mean_c`] = x.L.toFixed(4); v[`${x.r}_right_mean_c`] = x.R.toFixed(4); v[`${x.r}_delta_c`] = x.d.toFixed(4); v[`${x.r}_flagged`] = x.flag ? '1' : '0'; });
+  return CSV_COLS.map(c => { const s = String(v[c] ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; }).join(',');
+}
+$('csvBtn').onclick = () => {
+  const text = CSV_COLS.join(',') + '\n' + records.map(csvRow).join('\n') + (records.length ? '\n' : '');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv' })); a.download = 'practice_scans.csv'; a.click();
+};
+$('csvClear').onclick = () => { records.length = 0; drawRecords(); $('viewer').style.display = 'none'; };
+let selRec = -1;
+function drawRecords() {
+  $('recEmpty').style.display = records.length ? 'none' : 'block';
+  $('recTable').tBodies[0].innerHTML = records.map((r, i) => `<tr data-i="${i}" class="${i === selRec ? 'sel' : ''}"><td>${r.triggered_at_utc.slice(11, 19)}</td><td>${r.reference_code}</td><td>${r.ambient_temp_c}</td><td>${r.left_foot_position}</td><td>${r.sidedness_source}</td><td>${(+r.max_abs_delta_c).toFixed(2)}</td><td>${r.flagged_regions.replace(/;/g, ', ') || '—'}</td></tr>`).join('');
+  [...$('recTable').tBodies[0].rows].forEach(tr => tr.onclick = () => selectRecord(+tr.dataset.i));
+}
+function selectRecord(i) {
+  selRec = i; drawRecords(); const r = records[i]; $('viewer').style.display = 'block';
+  const ctx = $('cvRec').getContext('2d'); paintThermal(ctx, r.frame, +r.ambient_temp_c, { outline: true });
+  $('recRegions').tBodies[0].innerHTML = r.rows.map(x => `<tr class="${x.flag ? 'flag' : ''}"><td>${x.name}</td><td>${x.L.toFixed(2)}</td><td>${x.R.toFixed(2)}</td><td>${(x.d > 0 ? '+' : '') + x.d.toFixed(2)}${x.flag ? ' FLAG' : ''}</td></tr>`).join('');
+  $('measure').textContent = 'Move over the thermal picture to measure the temperature at any point.';
+}
+$('cvRec').addEventListener('mousemove', e => {
+  if (selRec < 0) return; const r = records[selRec], b = e.target.getBoundingClientRect();
+  const x = Math.min(TW - 1, Math.floor((e.clientX - b.left) / b.width * TW)), y = Math.min(TH - 1, Math.floor((e.clientY - b.top) / b.height * TH));
+  const i = y * TW + x, m = r.frame.map[i];
+  let where = 'background (cabinet)';
+  if (m >= 0) {
+    const imageLeft = (m >> 3) === 0, isLeft = imageLeft === r.leftIsImageLeft;
+    where = `${isLeft ? 'left' : 'right'} foot (as recorded), ${RNAME[m & 7]}`;
+  }
+  $('measure').innerHTML = `<b>${r.frame.t[i].toFixed(2)} °C</b> at pixel (${x}, ${y}) · ${where}<br><span style="color:var(--muted)">Practice data, made up for training.</span>`;
+});
 
 // ---------- tools ----------
 $('bPlay').onclick = () => { S.paused = !S.paused; $('iPlay').textContent = S.paused ? '▶' : '❚❚'; $('lPlay').textContent = S.paused ? 'Play' : 'Pause'; $('bPlay').classList.toggle('lit', S.paused); };
-$('bStop').onclick = () => { resetPatient(); $('tMsg').style.display = 'none'; S.error = 0; if (S.paused) $('bPlay').onclick(); };
-document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => {
-  S.speed = +b.dataset.speed; document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('lit', x === b));
-});
+$('bStop').onclick = () => { startCase(S.caseI); if (S.paused) $('bPlay').onclick(); };
+document.querySelectorAll('[data-speed]').forEach(b => b.onclick = () => { S.speed = +b.dataset.speed; document.querySelectorAll('[data-speed]').forEach(x => x.classList.toggle('lit', x === b)); });
 $('bLabels').onclick = () => { S.labels = !S.labels; $('bLabels').classList.toggle('lit', S.labels); $('lLabels').textContent = S.labels ? 'Labels on' : 'Labels off'; };
 function setPanels(on) { S.panels = on; leftWall.visible = on; lid.visible = on; $('bPanels').classList.toggle('lit', on); $('lPanels').textContent = on ? 'Panels on' : 'Panels off'; }
-$('bPanels').onclick = () => setPanels(!S.panels);
-setPanels(false);
-$('cCurtain').onchange = e => S.curtainT = e.target.checked ? 1 : 0;
+$('bPanels').onclick = () => setPanels(!S.panels); setPanels(false);
 $('cLid').onchange = e => { S.lidT = e.target.checked ? 1 : 0; if (e.target.checked && !S.panels) setPanels(true); };
 $('cFold').onchange = e => S.foldT = e.target.checked ? 1 : 0;
-$('cFeet').onchange = e => feet.visible = e.target.checked;
 $('cFov').onchange = e => fov.visible = e.target.checked;
 $('height').oninput = e => { S.height = +e.target.value; layout(); };
 $('explode').oninput = e => { S.explode = +e.target.value; $('ev').textContent = S.explode ? S.explode + '%' : 'off'; };
-// GitHub Pages serves this file next to index.html; Railway serves it at /cad with the home page at /
 if (location.pathname.endsWith('/cad')) $('back').href = '/';
 
 const VIEWS = {
   whole: { pos: [-1.35, 1.25, 1.55], target: [0, 0.55, 0.1] },
   head: { pos: [-0.55, 0.78, 0.35], target: [0, 0.6, -0.3] },
-  patient: { pos: [0.25, 0.85, 1.85], target: [0, 0.55, 0.2] },
+  patient: { pos: [0.15, 1.15, 2.2], target: [0, 0.55, 0.45] },
   operator: { pos: [1.7, 0.95, 0.35], target: [0, 0.6, 0] },
   bay: { pos: [-0.6, 0.9, -1.5], target: [0, 0.5, -0.35] },
 };
@@ -585,7 +969,7 @@ function setView(name) {
 }
 document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => setView(b.dataset.view));
 
-// ---------- picking ----------
+// picking
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let down = null;
 renderer.domElement.addEventListener('pointerdown', e => down = [e.clientX, e.clientY]);
 renderer.domElement.addEventListener('pointerup', e => {
@@ -598,13 +982,13 @@ renderer.domElement.addEventListener('pointerup', e => {
   const i = hit.object.userData.info;
   $('part').innerHTML = `<b>${i.name}</b> <span class="ref">· ${i.ref}</span><div>${i.text}</div>`;
   if (i === I.button) capture();
+  if (i === I.curtain) $('gShroud').onclick();
 });
 function visibleUp(o) { for (; o; o = o.parent) if (!o.visible) return false; return true; }
 
 // ---------- layout ----------
 function layout() {
-  const cabBottom = S.height - H / 2;
-  top.position.y = cabBottom * MM;
+  const cabBottom = S.height - H / 2; topG.position.y = cabBottom * MM;
   for (const p of posts) { const y0 = 180, y1 = cabBottom - 40; p.scale.y = y1 - y0; p.position.y = ((y0 + y1) / 2 - cabBottom) * MM; }
   $('hv').textContent = S.height + ' mm';
 }
@@ -625,48 +1009,88 @@ function resize() {
   $('screen').style.transform = `scale(${s})`; wrap.style.height = (480 * s + 12) + 'px';
 }
 addEventListener('resize', resize);
-
-// ---------- labels ----------
 const tmpP = new THREE.Vector3();
 function updateLabels() {
   const r = view.getBoundingClientRect();
   for (const L of labels) {
-    L.pos.copy(L.local); L.obj.localToWorld(L.pos);
-    tmpP.copy(L.pos).project(camera);
+    L.pos.copy(L.local); L.obj.localToWorld(L.pos); tmpP.copy(L.pos).project(camera);
     const vis = S.labels && visibleUp(L.obj) && tmpP.z < 1 && Math.abs(tmpP.x) < 1.05 && Math.abs(tmpP.y) < 1.05;
     L.el.style.display = vis ? 'block' : 'none';
     if (vis) { L.el.style.left = (r.left + (tmpP.x + 1) / 2 * r.width) + 'px'; L.el.style.top = (r.top + (1 - tmpP.y) / 2 * r.height) + 'px'; }
   }
 }
 
-// ---------- the capture sequence ----------
+// ======================================================================
+// The station, step by step
+// ======================================================================
 function phaseNow() {
   if (!S.cap) return null;
   let t = S.clock - S.cap.start;
   for (const [name, dur] of SEQ) { if (t < dur) return { name, p: t / dur, left: dur - t }; t -= dur; }
   return { name: 'done' };
 }
+function enterPhase(name) {
+  // checks happen in the same order as on the station; a refusal stops everything and saves nothing
+  if (name === 'gate') {
+    if (!ambientOk()) {
+      const warm = S.ambient > AMB_MAX;
+      refuse(warm ? 'Room too warm' : 'Room too cold', `The room is ${S.ambient.toFixed(1)} °C. Scanning needs 22 to 25 °C. ${warm ? 'Cool' : 'Warm'} the room, wait for the reading to come ${warm ? 'down' : 'up'}, then try again.`,
+        'room', 'Read the room temperature on the screen before pressing CAPTURE.');
+      return false;
+    }
+    mark('room', TR.room.s !== 'bad');
+  }
+  if (name === 'ffc') {
+    const left = Math.ceil(restRemaining());
+    if (left > 0) {
+      const m = Math.floor(left / 60), s = left % 60;
+      refuse('Rest period not finished', `The patient's feet must rest uncovered before scanning. ${m ? m + ' min' : ''}${m && s ? ' ' : ''}${s ? s + ' s' : ''} to go.`);
+      return false;
+    }
+    mark('shroud', P.shroud, P.shroud ? '' : 'The shroud was open: light and draughts reach the feet. Close it before scanning.');
+    mark('rest', !S.moved && !S.restCovered, S.restCovered ? 'The rest period started with the feet covered. Restart it once they are bare.' : S.moved ? 'The feet moved or were covered during the rest. Tap "Restart rest period" after fixing them.' : '');
+    S.captured = { trig: new Date(), amb: S.ambient, hum: 55.0, P: { ...P } };
+  }
+  if (name === 'colour') S.captured.col = new Date();
+  if (name === 'thermal') { S.captured.th = new Date(); S.captured.frame = thermalFrame(S.captured.P, C(), S.captured.amb, 99 + records.length); }
+  if (name === 'analyse') {
+    const q = S.captured.P;
+    if (q.socks) { refuse('Feet not clear', 'The feet could not be outlined. Check both soles face the cameras with the toes up, then scan again.', 'bare', 'The feet were still covered.'); return false; }
+    if (!q.inView) { refuse('Foot out of view', 'Part of a foot is outside the picture. Move both feet so each sole is fully inside the frame on the preview, then scan again.', 'place', 'Check the thermal view: the whole soles, toes to heel.'); return false; }
+    if (!q.apart) { refuse('Both soles are needed', 'The feet could not be told apart. Place both bare soles in view, slightly apart and not touching, with nothing else warm in the cabinet, then scan again.', 'place', 'The feet were touching.'); return false; }
+    mark('place', TR.place.s !== 'bad');
+  }
+  return true;
+}
 function updateSim(wall) {
+  // the room follows the air-con slowly
+  const k = Math.min(1, 0.12 * (S.paused ? 0 : 1) * 0.05 * S.speed * 60);
+  S.ambient += (S.setpoint - S.ambient) * k * 0.05;
+  $('roomT').textContent = S.ambient.toFixed(1) + ' °C'; $('roomT').classList.toggle('badT', !ambientOk());
+  $('setp').textContent = `air-con set to ${S.setpoint.toFixed(1)} °C`;
+
   let led = 0, ff = 0, tf = 0, cf = 0, sensor = 0, thermal = S.held ? 1 : 0;
   const rem = restRemaining();
+  // case 6: the patient moves during the rest
+  const c = C();
+  if (c.moveAt && S.page === 'pPrep' && S.restStart != null && !S.didMove && rem < REST_S * (1 - c.moveAt) && rem > 0) {
+    S.didMove = true; P.inView = false; S.moved = true; drawToggles();
+    $('story').textContent = 'The patient slid their feet up. Look at the thermal view: the toes are cut off. Put the feet back in place, then tap "Restart rest period".';
+  }
   if (S.page === 'pPrep' && !capturing()) {
     const left = Math.ceil(rem), m = Math.floor(left / 60), s = left % 60;
-    $('tCountdown').textContent = `${m}:${String(s).padStart(2, '0')}`;
-    $('tState').textContent = rem > 0 ? 'Resting. Keep feet uncovered and still.' : 'Ready to scan.';
-    $('tCapture').disabled = false;
-    if (rem <= 0 && $('story').textContent === STORY.rest) story('ready');
+    $('tCountdown').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    const ready = rem <= 0 && ambientOk();
+    $('tState').textContent = !ambientOk() ? 'Waiting for the room temperature.' : rem > 0 ? 'Resting. Keep feet uncovered and still.' : 'Ready to scan.';
+    $('tCapture').className = ready ? 'primary' : 'grey';
+    if (ready && /^Rest period/.test($('story').textContent)) story('ready');
   }
+  $('tAmbient').textContent = `Room ${S.ambient.toFixed(1)} °C, 55 % RH`; $('tAmbient').style.color = ambientOk() ? '#a5d6a7' : '#ffab91';
+
   const ph = phaseNow();
   if (ph && ph.name !== 'done') {
-    if (S.phase !== ph.name) {
-      S.phase = ph.name; story(ph.name);
-      if (ph.name === 'analyse' && !feet.visible) {
-        S.cap = null; S.phase = 'idle'; story('refused');
-        message('Both soles are needed', 'Fewer than two feet were found. Place both bare soles in view, slightly apart and not touching, with nothing else warm in the cabinet, then scan again.');
-        return finishFrame('error', wall, 0, 0, 0, 0, 0, 0);
-      }
-    }
-    $('tState').textContent = 'Capturing. Keep still.'; $('tCapture').disabled = true;
+    if (S.phase !== ph.name) { if (!enterPhase(ph.name)) return statusOut('error', wall, 0, 0, 0, 0, 0, 0); S.phase = ph.name; story(ph.name); }
+    $('tState').textContent = 'Capturing. Keep still.'; $('tCapture').className = 'grey';
     if (ph.name === 'ambient') sensor = 0.5 + 0.5 * Math.sin(wall * 8);
     if (ph.name === 'ffc') ff = Math.sin(ph.p * Math.PI);
     if (ph.name === 'colour') { led = 1; cf = ph.p < 0.6 ? 0.25 : 0.06; }
@@ -674,33 +1098,45 @@ function updateSim(wall) {
     if (ph.name === 'thermal') { tf = 0.22; thermal = Math.min(1, ph.p * 2); }
     if (ph.name === 'analyse') thermal = 1;
   } else if (ph && ph.name === 'done') {
-    S.cap = null; S.held = 1; show('pSides'); story('sides'); S.phase = 'sides'; thermal = 1;
+    S.cap = null; S.held = 1; S.phase = 'sides'; show('pSides'); story('sides');
+    $('tProposal').textContent = proposalText();
+    const ctx = $('cvS').getContext('2d'); paintThermal(ctx, S.captured.frame, S.captured.amb); markAB(ctx, S.captured.frame, ['A', 'B']);
+    thermal = 1;
   }
   let state = 'idle';
   if (S.error) state = 'error';
   else if (capturing()) state = 'capturing';
-  else if (S.page === 'pPrep') state = rem > 0 ? 'resting' : 'ready';
+  else if (S.page === 'pPrep') state = rem > 0 || !ambientOk() ? 'resting' : 'ready';
   else if (S.page !== 'pRef') state = 'ready';
-  finishFrame(state, wall, led, ff, tf, cf, sensor, thermal);
+  statusOut(state, wall, led, ff, tf, cf, sensor, thermal);
 }
-function finishFrame(state, wall, led, ff, tf, cf, sensor, thermal) {
+function statusOut(state, wall, led, ff, tf, cf, sensor, thermal) {
   ledMat.emissiveIntensity = led * 3; interiorLight.intensity = led * 2.5;
   thermalFill.opacity = tf; colourFill.opacity = cf; lensT.emissiveIntensity = ff * 2; sensorMat.emissiveIntensity = sensor * 1.5;
-  footMats.forEach((m, i) => {
-    const c = new THREE.Color(i ? 0xf88b1d : 0xd6304a);
-    m.color.set(0xd9a88a).lerp(c, thermal); m.emissive.copy(c).multiplyScalar(thermal * 0.35);
+  // live previews on the prepare page
+  if (S.page === 'pPrep' && (wall - S.lastPrev > 0.35 || capturing())) {
+    S.lastPrev = wall;
+    const f = thermalFrame(P, C(), S.ambient, 1 + Math.floor(wall * 3) % 1000);
+    paintThermal($('cvT').getContext('2d'), f, S.ambient);
+    paintColour($('cvC').getContext('2d'), P, led > 0);
+  }
+  // 3D feet follow the patient's position
+  footParts.forEach((g, i) => {
+    const sx = (i === 0 ? -1 : 1) * (P.apart ? 85 : 52);       // i 0 = patient's left = x < 0
+    g.position.x += (sx * MM - g.position.x) * 0.15; g.position.y += ((P.inView ? 0 : 75) * MM - g.position.y) * 0.15;
   });
-  if (S.page === 'pPrep') { drawFeet($('cvT').getContext('2d'), 330, 200, 'thermal'); drawFeet($('cvC').getContext('2d'), 330, 150, led ? 'lit' : 'unlit'); }
-  if (S.page === 'pSides') drawFeet($('cvS').getContext('2d'), 330, 200, 'sides');
+  footMats.forEach((m, i) => {
+    const base = new THREE.Color(P.socks ? 0x27345a : 0xd9a88a), cc = new THREE.Color(i ? 0xf88b1d : 0xd6304a);
+    m.color.copy(base).lerp(cc, P.socks ? 0 : thermal); m.emissive.copy(cc).multiplyScalar(P.socks ? 0 : thermal * 0.3);
+  });
   const pat = { idle: null, resting: [1, 1], ready: 'on', capturing: [0.1, 0.1], error: [0.1, 0.9] }[state];
   const on = pat === 'on' ? true : pat ? (wall % (pat[0] + pat[1])) < pat[0] : false;
   statusMat.emissiveIntensity = on ? 2.5 : 0; $('led').classList.toggle('on', on);
   $('ledState').textContent = 'Status LED: ' + { idle: 'off (idle)', resting: 'slow blink (resting)', ready: 'steady (ready)', capturing: 'fast blink (capturing)', error: 'short flashes (error)' }[state];
   btnMat.emissiveIntensity = state === 'ready' && S.page === 'pPrep' ? 0.6 : 0;
-  // the small screen on the 3D model follows the touchscreen
-  const title = { pRef: 'Enter reference code', pPrep: $('tState').textContent, pSides: 'Confirm LEFT foot', pRes: 'Scan saved' }[S.page];
-  sctx.fillStyle = '#263238'; sctx.fillRect(0, 0, 312, 184); sctx.fillStyle = '#455a64'; sctx.fillRect(0, 0, 312, 28);
-  sctx.fillStyle = '#fff'; sctx.font = 'bold 14px sans-serif'; sctx.fillText('DFU Station', 10, 19);
+  const title = { pRef: 'Enter reference code', pPrep: $('tState').textContent, pSides: 'Which is the LEFT foot?', pRes: 'Scan saved' }[S.page];
+  sctx.fillStyle = '#101418'; sctx.fillRect(0, 0, 312, 184); sctx.fillStyle = '#26323d'; sctx.fillRect(0, 0, 312, 28);
+  sctx.fillStyle = '#fff'; sctx.font = 'bold 14px sans-serif'; sctx.fillText('DEMO · DFU Station', 10, 19);
   sctx.font = 'bold 16px sans-serif'; sctx.fillText(title.slice(0, 32), 12, 80);
   if (S.page === 'pPrep') { sctx.font = 'bold 30px sans-serif'; sctx.fillText($('tCountdown').textContent, 12, 130); }
   stex.needsUpdate = true;
@@ -716,31 +1152,30 @@ function wrapText(text, maxW) { const words = text.split(' '), lines = []; let l
 function drawComposite() {
   const src = renderer.domElement, w = src.width, h = src.height, k = w / Math.max(src.clientWidth, 1);
   if (comp.width !== w || comp.height !== h) { comp.width = w; comp.height = h; }
-  cx.drawImage(src, 0, 0);
-  cx.textBaseline = 'middle';
+  cx.drawImage(src, 0, 0); cx.textBaseline = 'middle';
   if (S.labels) {
     cx.font = `${12 * k}px system-ui, sans-serif`;
     for (const L of labels) {
       if (L.el.style.display === 'none') continue;
       tmpP.copy(L.pos).project(camera);
       const x = (tmpP.x + 1) / 2 * w, y = (1 - tmpP.y) / 2 * h, tw = cx.measureText(L.el.textContent).width + 12 * k;
-      roundBox(x - tw / 2, y - 22 * k, tw, 20 * k, 5 * k, 'rgba(255,255,255,.9)');
-      cx.fillStyle = '#22303a'; cx.fillText(L.el.textContent, x - tw / 2 + 6 * k, y - 12 * k);
+      roundBox(x - tw / 2, y - 22 * k, tw, 20 * k, 5 * k, 'rgba(255,255,255,.9)'); cx.fillStyle = '#22303a'; cx.fillText(L.el.textContent, x - tw / 2 + 6 * k, y - 12 * k);
     }
   }
-  const lines = [['DFU Thermography Screening Station (simulation)', '#ffffff', 15], [`${S.code ? 'Patient DFU-' + S.code : 'No patient'}  ·  ${$('ledState').textContent}`, '#81c784', 13]];
+  // the touchscreen pictures in the corner, so a video shows what the operator saw
+  const pic = { pPrep: $('cvT'), pSides: $('cvS'), pRes: $('cvR') }[S.page];
+  if (pic) { const pw = 240 * k, ph = pw * pic.height / pic.width; roundBox(w - pw - 20 * k, 70 * k, pw + 8 * k, ph + 8 * k, 6 * k, '#000'); cx.drawImage(pic, w - pw - 16 * k, 74 * k, pw, ph); }
+  const lines = [['DFU Station practice simulator', '#ffffff', 15], [`${C().name}  ·  ${S.code ? 'Patient ' + S.code : 'No patient'}  ·  ${$('ledState').textContent}`, '#81c784', 13]];
   cx.font = `${13 * k}px system-ui, sans-serif`;
-  const st = wrapText($('story').textContent, Math.min(w * 0.5, 560 * k));
-  const boxW = Math.min(w * 0.5, 560 * k) + 24 * k, boxH = (lines.length * 22 + st.length * 18 + 18) * k;
+  const stl = wrapText($('story').textContent, Math.min(w * 0.5, 560 * k));
+  const boxW = Math.min(w * 0.5, 560 * k) + 24 * k, boxH = (lines.length * 22 + stl.length * 18 + 18) * k;
   roundBox(12 * k, 12 * k, boxW, boxH, 10 * k, 'rgba(20,30,38,.82)');
   let y = 32 * k;
   for (const [text, colour, size] of lines) { cx.font = `${size === 15 ? '700 ' : ''}${size * k}px system-ui, sans-serif`; cx.fillStyle = colour; cx.fillText(text, 24 * k, y); y += 22 * k; }
-  cx.font = `${13 * k}px system-ui, sans-serif`; cx.fillStyle = '#cfd8dc';
-  for (const l of st) { cx.fillText(l, 24 * k, y); y += 18 * k; }
+  cx.font = `${13 * k}px system-ui, sans-serif`; cx.fillStyle = '#cfd8dc'; for (const l of stl) { cx.fillText(l, 24 * k, y); y += 18 * k; }
   const note = $('concept').textContent; cx.font = `600 ${12 * k}px system-ui, sans-serif`;
   const nw = cx.measureText(note).width + 20 * k;
-  roundBox(w - nw - 12 * k, h - 34 * k, nw, 24 * k, 6 * k, 'rgba(255,244,214,.95)');
-  cx.fillStyle = '#6b4e00'; cx.fillText(note, w - nw - 2 * k, h - 22 * k);
+  roundBox(w - nw - 12 * k, h - 34 * k, nw, 24 * k, 6 * k, 'rgba(255,244,214,.95)'); cx.fillStyle = '#6b4e00'; cx.fillText(note, w - nw - 2 * k, h - 22 * k);
 }
 $('bPhoto').onclick = () => { wantPicture = true; };
 function pickType() { for (const t of ['video/mp4;codecs=avc1.42E01E', 'video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm']) if (window.MediaRecorder && MediaRecorder.isTypeSupported(t)) return t; return ''; }
@@ -752,17 +1187,16 @@ $('bRec').onclick = () => {
   recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
   recorder.onstop = () => {
     const ext = recType.startsWith('video/mp4') ? 'mp4' : 'webm';
-    saveFile(URL.createObjectURL(new Blob(recChunks, { type: recType.split(';')[0] })), `dfu-station-simulation-${stamp()}.${ext}`);
+    saveFile(URL.createObjectURL(new Blob(recChunks, { type: recType.split(';')[0] })), `dfu-station-practice-${stamp()}.${ext}`);
     recorder = null; $('bRec').classList.remove('recording'); $('iRec').textContent = '●';
     const kB = Math.round(recChunks.reduce((n, c) => n + c.size, 0) / 1024);
-    $('lRec').textContent = `Saved ${kB} kB ${ext.toUpperCase()}`;
-    setTimeout(() => { if (!recorder) $('lRec').textContent = 'Record'; }, 4000);
+    $('lRec').textContent = `Saved ${kB} kB ${ext.toUpperCase()}`; setTimeout(() => { if (!recorder) $('lRec').textContent = 'Record'; }, 4000);
   };
   recorder.start(500); recStarted = performance.now(); $('bRec').classList.add('recording'); $('iRec').textContent = '■';
 };
 
 // ---------- render loop ----------
-layout(); resize(); setView('whole'); story('ref');
+layout(); resize(); setView('whole'); startCase(0); drawRecords();
 $('loading').remove();
 let last = performance.now();
 function render() {
@@ -773,15 +1207,16 @@ function render() {
   for (const o of explodable) o.position.copy(o.userData.base).addScaledVector(o.userData.ex, S.explode / 100);
   lidPivot.rotation.x = -S.lid * 1.25; rest.rotation.x = -S.fold * Math.PI / 2; placeSprings();
   for (const p of panes) p.scale.x = 0.3 + 0.7 * S.curtain;
-  updateSim(now / 1000);
-  controls.update();
-  renderer.render(scene, camera); updateLabels();
+  if (!S.paused) updateSim(now / 1000);
+  controls.update(); renderer.render(scene, camera); updateLabels();
   if (recorder || wantPicture) drawComposite();
-  if (wantPicture) { wantPicture = false; saveFile(comp.toDataURL('image/jpeg', 0.92), `dfu-station-simulation-${stamp()}.jpg`); }
+  if (wantPicture) { wantPicture = false; saveFile(comp.toDataURL('image/jpeg', 0.92), `dfu-station-practice-${stamp()}.jpg`); }
   if (recorder) { const s = Math.floor((now - recStarted) / 1000); $('lRec').textContent = `Stop ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }
   requestAnimationFrame(render);
 }
 render();
+// for automated checks: advance the simulation clock without animation frames
+window.dfuSim = { step(seconds) { for (let t = 0; t < seconds; t += 0.05) { S.clock += 0.05; updateSim(performance.now() / 1000 + t); } } };
 </script>
 </body>
 </html>
