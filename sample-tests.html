@@ -1,0 +1,167 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sample Test Results</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.sample{border:1px solid var(--line);border-radius:14px;padding:14px;margin:16px 0}
+.sample.ok{border-left:6px solid #2e9d57} .sample.miss{border-left:6px solid #c2483d}
+.sample h3{margin:0 0 10px}
+.tag{font-size:13px;font-weight:600;padding:2px 8px;border-radius:999px;margin-left:6px}
+.ok .tag{background:#2e9d5722;color:#2e9d57} .miss .tag{background:#c2483d22;color:#c2483d}
+.pics{display:grid;grid-template-columns:1fr 1fr;gap:10px} figure{margin:0}
+.pics img,.refused{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:block}
+.refused{display:flex;align-items:center;justify-content:center;background:var(--tint);color:var(--muted);font-weight:600}
+figcaption{font-size:12px;color:var(--muted);margin-top:4px}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+td,th{border:1px solid var(--line);padding:6px 8px;text-align:left}
+td.diag{font-weight:700;background:var(--tint)}
+.bar{display:grid;grid-template-columns:62px 1fr 48px;align-items:center;gap:8px;font-size:13px;margin:3px 0}
+.bar i{display:block;height:10px;border-radius:5px;background:var(--brand)}
+.src{font-size:12px;color:var(--muted);margin:6px 0 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:12px 0}
+.stat{background:var(--tint);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:24px;color:var(--brand)}
+.cmwrap{overflow-x:auto}
+@media (max-width:560px){.pics{grid-template-columns:1fr}}
+</style></head><body><main>
+<p><a href="index.html">&larr; Back to all files</a></p>
+<h1>Sample test results</h1>
+<p class="meta">DFU Thermography Screening Station · prototype model, November 16, 2026</p>
+<div class="warn"><b>Research prototype, not a diagnosis.</b> The model outputs a class with a confidence. It never
+assigns a Wagner grade. The grades on this page are the ones the dataset's own experts gave, shown only to check the
+model.</div>
+
+<h2>What was tested</h2>
+<p>MobileNetV2 (ImageNet weights, last layer trained) on the Raspberry Pi RGB and thermal dataset of Mermer, Aksu et
+al., grades 0 to 2. The pictures were split by patient group (capture session) into 5 folds. This page shows fold
+0: the model was trained on 32 groups (644 pictures) and tested on
+8 other groups (106 pictures) it had never seen. The 10 samples below come from those
+unseen test groups.</p>
+<div class="stats">
+<div class="stat"><b>106</b>unseen test pictures</div>
+<div class="stat"><b>54 %</b>matched the dataset grade</div>
+<div class="stat"><b>6 of 10</b>samples below matched</div>
+<div class="stat"><b>8</b>unseen patient groups</div></div>
+
+<h2>All 106 test pictures of this fold</h2>
+<div class="cmwrap"><table><tr><th>Rows: dataset grade<br>Columns: model output</th><th>class_0 (grade 0 pictures)</th><th>class_1 (grade 1 pictures)</th><th>class_2 (grade 2 pictures)</th><th>Matched</th></tr>
+<tr><th>Dataset grade 0</th><td class="diag">0</td><td class="">11</td><td class="">5</td><td><b>0 of 16</b> (0 %)</td></tr><tr><th>Dataset grade 1</th><td class="">4</td><td class="diag">15</td><td class="">3</td><td><b>15 of 22</b> (68 %)</td></tr><tr><th>Dataset grade 2</th><td class="">8</td><td class="">18</td><td class="diag">42</td><td><b>42 of 68</b> (62 %)</td></tr></table></div>
+<p>The highlighted cells are matches. Read each row: of the pictures with that grade, how many the model put in each
+class.</p>
+
+<h2>The 10 samples</h2>
+<article class="sample miss">
+<h3>Sample 1 <span class="tag">Does not match</span></h3>
+<div class="pics"><figure><img src="samples/sample_01_rgb.jpg" alt="RGB picture, sample 1"><figcaption>RGB (Pi Camera)</figcaption></figure>
+<figure><img src="samples/sample_01_thermal.png" alt="Thermal frame, sample 1"><figcaption>Thermal (Lepton 3.5): white outline = foot, green + = hottest spot</figcaption></figure></div>
+<table class="res"><tr><td>Grade given by the dataset's experts</td><td><b>Grade 1</b></td></tr>
+<tr><td>Model output</td><td><b>class_2</b> (the class trained on grade 2 pictures), confidence 65 %</td></tr>
+<tr><td>Foot mean</td><td>37.6 °C</td></tr><tr><td>Foot highest</td><td>40.6 °C</td></tr><tr><td>Hottest spot above foot mean</td><td>3.0 °C</td></tr></table>
+<div class="probs"><div class="bar"><span>class_0</span><i style="width:1%"></i><b>1 %</b></div><div class="bar"><span>class_1</span><i style="width:34%"></i><b>34 %</b></div><div class="bar"><span>class_2</span><i style="width:65%"></i><b>65 %</b></div></div>
+<p class="src">File 2024-05-17_03-09-14pic_cam.jpg · test group public_v1-g00033</p></article>
+<article class="sample ok">
+<h3>Sample 2 <span class="tag">Matches the dataset grade</span></h3>
+<div class="pics"><figure><img src="samples/sample_02_rgb.jpg" alt="RGB picture, sample 2"><figcaption>RGB (Pi Camera)</figcaption></figure>
+<figure><img src="samples/sample_02_thermal.png" alt="Thermal frame, sample 2"><figcaption>Thermal (Lepton 3.5): white outline = foot, green + = hottest spot</figcaption></figure></div>
+<table class="res"><tr><td>Grade given by the dataset's experts</td><td><b>Grade 2</b></td></tr>
+<tr><td>Model output</td><td><b>class_2</b> (the class trained on grade 2 pictures), confidence 97 %</td></tr>
+<tr><td>Foot mean</td><td>35.6 °C</td></tr><tr><td>Foot highest</td><td>36.4 °C</td></tr><tr><td>Hottest spot above foot mean</td><td>0.8 °C</td></tr></table>
+<div class="probs"><div class="bar"><span>class_0</span><i style="width:2%"></i><b>2 %</b></div><div class="bar"><span>class_1</span><i style="width:1%"></i><b>1 %</b></div><div class="bar"><span>class_2</span><i style="width:97%"></i><b>97 %</b></div></div>
+<p class="src">File 2024-06-07_23-18-39pic_cam.jpg · test group public_v1-g00183</p></article>
+<article class="sample miss">
+<h3>Sample 3 <span class="tag">Does not match</span></h3>
+<div class="pics"><figure><img src="samples/sample_03_rgb.jpg" alt="RGB picture, sample 3"><figcaption>RGB (Pi Camera)</figcaption></figure>
+<figure><img src="samples/sample_03_thermal.png" alt="Thermal frame, sample 3"><figcaption>Thermal (Lepton 3.5): white outline = foot, green + = hottest spot</figcaption></figure></div>
+<table class="res"><tr><td>Grade given by the dataset's experts</td><td><b>Grade 1</b></td></tr>
+<tr><td>Model output</td><td><b>class_0</b> (the class trained on grade 0 pictures), confidence 51 %</td></tr>
+<tr><td>Foot mean</td><td>37.1 °C</td></tr><tr><td>Foot highest</td><td>37.9 °C</td></tr><tr><td>Hottest spot above foot mean</td><td>0.8 °C</td></tr></table>
+<div class="probs"><div class="bar"><span>class_0</span><i style="width:51%"></i><b>51 %</b></div><div class="bar"><span>class_1</span><i style="width:25%"></i><b>25 %</b></div><div class="bar"><span>class_2</span><i style="width:23%"></i><b>23 %</b></div></div>
+<p class="src">File 2024-07-25_07-46-08pic_cam.jpg · test group public_v1-g00060</p></article>
+<article class="sample miss">
+<h3>Sample 4 <span class="tag">Does not match</span></h3>
+<div class="pics"><figure><img src="samples/sample_04_rgb.jpg" alt="RGB picture, sample 4"><figcaption>RGB (Pi Camera)</figcaption></figure>
+<figure><img src="samples/sample_04_thermal.png" alt="Thermal frame, sample 4"><figcaption>Thermal (Lepton 3.5): white outline = foot, green + = hottest spot</figcaption></figure></div>
+<table class="res"><tr><td>Grade given by the dataset's experts</td><td><b>Grade 0</b></td></tr>
+<tr><td>Model output</td><td><b>class_1</b> (the class trained on grade 1 pictures), confidence 98 %</td></tr>
+<tr><td>Foot mean</td><td>32.0 °C</td></tr><tr><td>Foot highest</td><td>33.7 °C</td></tr><tr><td>Hottest spot above foot mean</td><td>1.6 °C</td></tr></table>
+<div class="probs"><div class="bar"><span>class_0</span><i style="width:1%"></i><b>1 %</b></div><div class="bar"><span>class_1</span><i style="width:98%"></i><b>98 %</b></div><div class="bar"><span>class_2</span><i style="width:2%"></i><b>2 %</b></div></div>
+<p class="src">File 2024-07-25_10-18-12pic_cam.jpg · test group public_v1-g00009</p></article>
+<article class="sample ok">
+<h3>Sample 5 <span class="tag">Matches the dataset grade</span></h3>
+<div class="pics"><figure><img src="samples/sample_05_rgb.jpg" alt="RGB picture, sample 5"><figcaption>RGB (Pi Camera)</figcaption></figure>
+<figure><div class="refused">Thermal frame refused</div><figcaption>Thermal (Lepton 3.5): white outline = foot, green + = hottest spot</figcaption></figure></div>
+<table class="res"><tr><td>Grade given by the dataset's experts</td><td><b>Grade 1</b></td></tr>
+<tr><td>Model output</td><td><b>class_1</b> (the class trained on grade 1 pictures), confidence 73 %</td></tr>
+<tr><td colspan="2">Thermal refused: values do not read as skin temperature. Not adjusted, not estimated.</td></tr></table>
+<div class="probs"><div class="bar"><span>class_0</span><i style="width:10%"></i><b>10 %</b></div><div class="bar"><span>class_1</span><i style="width:73%"></i><b>73 %</b></div><div class="bar"><span>class_2</span><i style="width:16%"></i><b>16 %</b></div></div>
+<p class="src">File 2024-07-25_21-55-36pic_cam.jpg · test group public_v1-g00116</p></article>
+<article class="sample ok">
+<h3>Sample 6 <span class="tag">Matches the dataset grade</span></h3>
+<div class="pics"><figure><img src="samples/sample_06_rgb.jpg" alt="RGB picture, sample 6"><figcaption>RGB (Pi Camera)</figcaption></figure>
+<figure><img src="samples/sample_06_thermal.png" alt="Thermal frame, sample 6"><figcaption>Thermal (Lepton 3.5): white outline = foot, green + = hottest spot</figcaption></figure></div>
+<table class="res"><tr><td>Grade given by the dataset's experts</td><td><b>Grade 2</b></td></tr>
+<tr><td>Model output</td><td><b>class_2</b> (the class trained on grade 2 pictures), confidence 95 %</td></tr>
+<tr><td>Foot mean</td><td>39.8 °C</td></tr><tr><td>Foot highest</td><td>42.1 °C</td></tr><tr><td>Hottest spot above foot mean</td><td>2.4 °C</td></tr></table>
+<div class="probs"><div class="bar"><span>class_0</span><i style="width:0%"></i><b>0 %</b></div><div class="bar"><span>class_1</span><i style="width:5%"></i><b>5 %</b></div><div class="bar"><span>class_2</span><i style="width:95%"></i><b>95 %</b></div></div>
+<p class="src">File 2024-07-25_21-18-53pic_cam.jpg · test group public_v1-g00335</p></article>
+<article class="sample ok">
+<h3>Sample 7 <span class="tag">Matches the dataset grade</span></h3>
+<div class="pics"><figure><img src="samples/sample_07_rgb.jpg" alt="RGB picture, sample 7"><figcaption>RGB (Pi Camera)</figcaption></figure>
+<figure><img src="samples/sample_07_thermal.png" alt="Thermal frame, sample 7"><figcaption>Thermal (Lepton 3.5): white outline = foot, green + = hottest spot</figcaption></figure></div>
+<table class="res"><tr><td>Grade given by the dataset's experts</td><td><b>Grade 1</b></td></tr>
+<tr><td>Model output</td><td><b>class_1</b> (the class trained on grade 1 pictures), confidence 98 %</td></tr>
+<tr><td>Foot mean</td><td>37.0 °C</td></tr><tr><td>Foot highest</td><td>39.8 °C</td></tr><tr><td>Hottest spot above foot mean</td><td>2.8 °C</td></tr></table>
+<div class="probs"><div class="bar"><span>class_0</span><i style="width:0%"></i><b>0 %</b></div><div class="bar"><span>class_1</span><i style="width:98%"></i><b>98 %</b></div><div class="bar"><span>class_2</span><i style="width:1%"></i><b>1 %</b></div></div>
+<p class="src">File 2024-05-17_03-09-23pic_cam.jpg · test group public_v1-g00033</p></article>
+<article class="sample ok">
+<h3>Sample 8 <span class="tag">Matches the dataset grade</span></h3>
+<div class="pics"><figure><img src="samples/sample_08_rgb.jpg" alt="RGB picture, sample 8"><figcaption>RGB (Pi Camera)</figcaption></figure>
+<figure><div class="refused">Thermal frame refused</div><figcaption>Thermal (Lepton 3.5): white outline = foot, green + = hottest spot</figcaption></figure></div>
+<table class="res"><tr><td>Grade given by the dataset's experts</td><td><b>Grade 2</b></td></tr>
+<tr><td>Model output</td><td><b>class_2</b> (the class trained on grade 2 pictures), confidence 98 %</td></tr>
+<tr><td colspan="2">Thermal refused: values do not read as skin temperature. Not adjusted, not estimated.</td></tr></table>
+<div class="probs"><div class="bar"><span>class_0</span><i style="width:0%"></i><b>0 %</b></div><div class="bar"><span>class_1</span><i style="width:1%"></i><b>1 %</b></div><div class="bar"><span>class_2</span><i style="width:98%"></i><b>98 %</b></div></div>
+<p class="src">File 2024-07-25_22-17-40pic_cam.jpg · test group public_v1-g00342</p></article>
+<article class="sample miss">
+<h3>Sample 9 <span class="tag">Does not match</span></h3>
+<div class="pics"><figure><img src="samples/sample_09_rgb.jpg" alt="RGB picture, sample 9"><figcaption>RGB (Pi Camera)</figcaption></figure>
+<figure><img src="samples/sample_09_thermal.png" alt="Thermal frame, sample 9"><figcaption>Thermal (Lepton 3.5): white outline = foot, green + = hottest spot</figcaption></figure></div>
+<table class="res"><tr><td>Grade given by the dataset's experts</td><td><b>Grade 1</b></td></tr>
+<tr><td>Model output</td><td><b>class_0</b> (the class trained on grade 0 pictures), confidence 80 %</td></tr>
+<tr><td>Foot mean</td><td>37.1 °C</td></tr><tr><td>Foot highest</td><td>38.1 °C</td></tr><tr><td>Hottest spot above foot mean</td><td>1.1 °C</td></tr></table>
+<div class="probs"><div class="bar"><span>class_0</span><i style="width:80%"></i><b>80 %</b></div><div class="bar"><span>class_1</span><i style="width:12%"></i><b>12 %</b></div><div class="bar"><span>class_2</span><i style="width:8%"></i><b>8 %</b></div></div>
+<p class="src">File 2024-07-25_07-46-14pic_cam.jpg · test group public_v1-g00060</p></article>
+<article class="sample ok">
+<h3>Sample 10 <span class="tag">Matches the dataset grade</span></h3>
+<div class="pics"><figure><img src="samples/sample_10_rgb.jpg" alt="RGB picture, sample 10"><figcaption>RGB (Pi Camera)</figcaption></figure>
+<figure><img src="samples/sample_10_thermal.png" alt="Thermal frame, sample 10"><figcaption>Thermal (Lepton 3.5): white outline = foot, green + = hottest spot</figcaption></figure></div>
+<table class="res"><tr><td>Grade given by the dataset's experts</td><td><b>Grade 2</b></td></tr>
+<tr><td>Model output</td><td><b>class_2</b> (the class trained on grade 2 pictures), confidence 40 %</td></tr>
+<tr><td>Foot mean</td><td>34.3 °C</td></tr><tr><td>Foot highest</td><td>35.2 °C</td></tr><tr><td>Hottest spot above foot mean</td><td>0.9 °C</td></tr></table>
+<div class="probs"><div class="bar"><span>class_0</span><i style="width:24%"></i><b>24 %</b></div><div class="bar"><span>class_1</span><i style="width:36%"></i><b>36 %</b></div><div class="bar"><span>class_2</span><i style="width:40%"></i><b>40 %</b></div></div>
+<p class="src">File 2024-06-07_23-18-40pic_cam.jpg · test group public_v1-g00183</p></article>
+
+
+<h2>What the results show</h2>
+<ul>
+<li><b>Grade 2 is recognised best</b> (42 of 68). It has the most pictures and patient groups.</li>
+<li><b>Grade 0 was not recognised</b> (0 of 16). The dataset has only 5 grade 0 capture sessions, so
+in each fold the model learns grade 0 from about 4 feet. That is too few, and it is the main reason the team's own
+clinician-graded data is needed.</li>
+<li><b>Grade 1 is often confused with 0 and 2.</b> It sits between them and the visible differences are small.</li>
+<li><b>Thermal pictures show where the foot is warmest.</b> Temperatures are read from the dataset's raw Lepton values
+as centikelvin; that reading was not checked against a reference thermometer. Two frames did not read as skin
+temperature and were refused, not corrected.</li>
+<li><b>The 2.2 °C left-right check is not shown here.</b> These pictures show one foot at a time. The station
+photographs both soles together and compares them region by region.</li>
+<li><b>These are honest numbers.</b> The paper reports 93 % with a split that can put frames of the same foot on both
+sides. Here every test picture comes from patient groups the model never saw.</li>
+</ul>
+
+<div class="note">Images: Mermer G., Aksu M. F., Ozsezer G., Cetinkalp S., Er O., Gullu M. K., <i>Multimodal Deep
+Learning for Diabetic Foot Ulcer Staging Using Integrated RGB and Thermal Imaging</i>, arXiv 2603.26952 (2026);
+github.com/faksu267/Multimodal-Diabetic-Foot-Ulcer-Classification. Shown for academic reference, with citation. The
+dataset has no stated licence and permission has been requested; these pictures will be removed if the authors ask.
+The model will be retrained on the research team's own clinician-graded data.</div>
+<footer>eMathrix Technologies, Cabuyao, Laguna · Contract EMX-2026-DFUSCAN-01</footer>
+</main></body></html>
