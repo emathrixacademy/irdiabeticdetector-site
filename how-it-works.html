@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How the Station Works</title>
+<meta name="description" content="How the DFU station's classifier is trained, the station's program flowchart, and an exploded view of its parts.">
+<link rel="stylesheet" href="style.css">
+<style>
+main{max-width:900px}
+svg.dia{width:100%;height:auto;display:block;margin:12px 0}
+.dia text{font:13px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;fill:var(--ink)}
+.dia .sm{font-size:11.5px;fill:var(--muted)}
+.dia .b{font-weight:700}
+.dia .node{fill:var(--bg);stroke:var(--brand);stroke-width:1.6}
+.dia .term{fill:var(--brand)} .dia .term+text,.dia text.on{fill:var(--brand-ink);font-weight:700}
+.dia .dec{fill:var(--tint);stroke:var(--brand);stroke-width:1.6}
+.dia .io{fill:var(--tint);stroke:var(--brand);stroke-width:1.6}
+.dia .bad{fill:var(--warn);stroke:#c0392b;stroke-width:1.6}
+.dia .ok{fill:var(--warn);stroke:var(--warn-line);stroke-width:1.6}
+.dia .edge{stroke:var(--muted);stroke-width:1.6;fill:none}
+.dia .edge.r{stroke:#c0392b}
+.dia .lbl{font-size:12px;font-weight:700;fill:var(--muted)}
+.dia .lbl.r{fill:#c0392b}
+.dia .phase{fill:none;stroke:var(--line);stroke-dasharray:5 4}
+.dia .ptitle{font-size:12px;font-weight:700;fill:var(--muted);letter-spacing:.04em}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.85rem;color:var(--muted);margin:4px 0 8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:22px;height:14px;border:1.6px solid var(--brand);background:var(--bg)}
+.legend i.t{background:var(--brand);border-radius:8px}
+.legend i.d{background:var(--tint);transform:rotate(45deg) scale(.75)}
+.legend i.o{background:var(--tint);transform:skewX(-18deg)}
+.legend i.x{background:var(--warn);border-color:#c0392b}
+.ctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0}
+.ctl input[type=range]{flex:1;min-width:160px;accent-color:var(--brand)}
+.ctl button{background:var(--brand);color:var(--brand-ink);border:0;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
+#exploded{background:var(--tint);border-radius:12px}
+#exploded .pf{stroke:#1d2327;stroke-width:.8;stroke-linejoin:round}
+#exploded .badge{fill:#0f5f73;stroke:#fff;stroke-width:1.5}
+#exploded .bnum{fill:#fff;font:700 11px system-ui,sans-serif}
+#exploded .lead{stroke:#0f5f73;stroke-width:1}
+#exploded text.grp{font:700 12px system-ui,sans-serif;fill:var(--muted)}
+table.parts{border-collapse:collapse;width:100%;font-size:.92rem;margin:12px 0}
+table.parts th,table.parts td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+table.parts td:first-child{font-weight:700;color:var(--brand);text-align:center;width:2.4em}
+table.parts tr.hl td{background:var(--tint)}
+.wrap{overflow-x:auto}
+@media (max-width:640px){#mlsvg,#flowsvg{min-width:600px}}
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="index.html">&larr; Back to all files</a>
+  <h1>How the station works</h1>
+  <p class="meta">DFU Thermography Screening Station · eMathrix Technologies</p>
+  <div class="warn"><b>Research instrument, not a medical device.</b> The station does not diagnose or grade anyone.
+    Wagner grades come only from a licensed clinician. The colour model's output is a class, never a grade.</div>
+
+  <p>Contents: <a href="#ml">1. How the machine learning works</a> ·
+    <a href="#flow">2. Program flowchart</a> · <a href="#parts">3. Exploded parts of the device</a></p>
+
+  <h2 id="ml">1. How the machine learning works</h2>
+  <p>The colour model is <b>MobileNetV2</b>. It is trained on a separate computer, never on the station, and only
+    copied to the station as a finished file. The 2.2 °C left–right temperature check is <b>not</b> machine
+    learning: it is fixed arithmetic and is never trained.</p>
+  <div class="wrap"><svg class="dia" id="mlsvg" role="img" aria-label="Machine learning pipeline from graded images to the station"></svg></div>
+  <div class="note"><b>Today:</b> the stand-in model is trained on the Mermer, Aksu et al. Raspberry Pi dataset
+    (grades 0–2), because the station has no graded scans of its own yet. It is to be retrained on station scans
+    graded by the study clinician, after ethics approval. Accuracy from public data is reported with its limits:
+    the images are burst shots of few patients, so they are grouped by capture session before any split.</div>
+
+  <h2 id="flow">2. Program flowchart</h2>
+  <p>What the station's program does for one scan, from the reference code to the saved record. Every check that
+    fails stops the scan with a message. Nothing is guessed or filled in.</p>
+  <div class="legend">
+    <span><i class="t"></i>Start / end</span><span><i></i>Process</span><span><i class="d"></i>Decision</span>
+    <span><i class="o"></i>Input / output</span><span><i class="x"></i>Scan refused or stopped</span>
+  </div>
+  <div class="wrap"><svg class="dia" id="flowsvg" role="img" aria-label="Station program flowchart"></svg></div>
+
+  <h2 id="parts">3. Exploded parts of the device</h2>
+  <p>The station pulled apart so each part can be seen. Drag the slider to take it apart or put it back together.
+    Tap a row in the table to highlight that part. Sizes follow the 3D practice model (cabinet 500 × 400 × 750 mm,
+    soles 420 mm from the cameras); BOM letters refer to the bill of materials.</p>
+  <div class="ctl">
+    <label for="ex">Assembled</label><input id="ex" type="range" min="0" max="100" value="100"><label for="ex">Exploded</label>
+    <button id="exBtn" type="button">Animate</button>
+  </div>
+  <svg id="exploded" class="dia" role="img" aria-label="Exploded view of the station"></svg>
+  <div class="wrap"><table class="parts" id="partsTable">
+    <thead><tr><th>#</th><th>Part</th><th>BOM</th><th>What it does</th></tr></thead><tbody></tbody>
+  </table></div>
+  <p class="meta">See also: <a href="cad.html">practice simulator (3D)</a> ·
+    <a href="files/DFU-Station-bill-of-materials.pdf">bill of materials</a> ·
+    <a href="files/DFU-Station-schematic.pdf">wiring schematic</a></p>
+
+  <footer>eMathrix Technologies, Cabuyao, Laguna · Contract EMX-2026-DFUSCAN-01</footer>
+</main>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+function el(parent, tag, attrs, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  parent.appendChild(e); return e;
+}
+function lines(parent, x, y, arr, cls, lh = 16, anchor = 'middle') {
+  const y0 = y - (arr.length - 1) * lh / 2;
+  arr.forEach((t, i) => el(parent, 'text', { x, y: y0 + i * lh + 4, 'text-anchor': anchor, class: (i === 0 ? 'b ' : 'sm ') + (cls || '') }, t));
+}
+function marker(svg, id, colour) {
+  const defs = svg.querySelector('defs') || el(svg, 'defs', {});
+  const m = el(defs, 'marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' });
+  el(m, 'path', { d: 'M0,0 L10,5 L0,10 z', fill: colour });
+}
+function arrow(svg, d, red) { el(svg, 'path', { d, class: 'edge' + (red ? ' r' : ''), 'marker-end': red ? 'url(#ar)' : 'url(#ag)' }); }
+
+/* ---------- 1. Machine learning pipeline ---------- */
+(function () {
+  const svg = document.getElementById('mlsvg');
+  marker(svg, 'ag', '#7a8a94'); marker(svg, 'ar', '#c0392b');
+  const W = 760, bw = 430, cx = 250, bh = 58, gap = 26;
+  const phases = [
+    ['TRAINING COMPUTER (x86, Python, PyTorch)', 0, 7],
+    ['COMPILE (x86 Linux PC, Hailo Dataflow Compiler)', 8, 8],
+    ['STATION (Raspberry Pi 5 + AI HAT+, offline)', 9, 10],
+  ];
+  const steps = [
+    ['1. Graded colour images', 'Now: Raspberry Pi dataset, grades 0–2 (stand-in)', 'Later: station scans graded by the study clinician'],
+    ['2. Intake', 'Exact label map per dataset; unclear labels rejected and listed', 'Identical copies removed; same image with two grades rejected'],
+    ['3. Group by patient', 'Patient id where known; otherwise capture session', 'and picture similarity. One foot never sits on both sides'],
+    ['4. Data-quality report', 'Images and patients per class, imbalance warnings', 'Nothing dropped, filled in or rebalanced'],
+    ['5. Patient-grouped cross-validation (5 folds)', 'Train on 4 folds, test on the 5th, repeat 5 times', 'Gives the honest accuracy, recall per class, confusion matrix'],
+    ['6. MobileNetV2 transfer learning', 'Starts from ImageNet weights; backbone frozen; new last layer', 'Adam 1e-3, 20 epochs, batch 16, class weights, flip/brightness'],
+    ['7. Final model', 'Trained on all images: final_model.pt + label_map.json', 'Classes are named class_0, class_1, ... (never a grade)'],
+    ['8. Export to ONNX', 'Fixed input 1 × 3 × 224 × 224', 'Parity check: ONNX and PyTorch outputs must match (≤ 1e-4)'],
+    ['9. Compile to .hef', 'Quantised with at least 64 station colour frames', 'Never compiled on the Pi'],
+    ['10. Copy to the station', 'models/dfu_mobilenetv2.hef + model_meta.json', 'Runs on the Hailo-8L, fully offline'],
+    ['11. Colour model result on screen', 'Shown as a class with its confidence, next to the 2.2 °C table', 'Not a Wagner grade, never written to a grade field'],
+  ];
+  const top = 34, ys = steps.map((_, i) => top + i * (bh + gap) + (i >= 8 ? 30 : 0) + (i >= 9 ? 30 : 0));
+  const H = ys[ys.length - 1] + bh + 20;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  for (const [title, a, b] of phases) {
+    const y0 = ys[a] - 26, y1 = ys[b] + bh + 10;
+    el(svg, 'rect', { x: 8, y: y0, width: W - 16, height: y1 - y0, rx: 12, class: 'phase' });
+    el(svg, 'text', { x: W - 20, y: y0 + 16, 'text-anchor': 'end', class: 'ptitle' }, title);
+  }
+  steps.forEach((s, i) => {
+    const x = cx - bw / 2, y = ys[i];
+    const cls = i === 0 || i === 10 ? 'io' : 'node';
+    if (cls === 'io') el(svg, 'path', { d: `M${x + 14},${y} H${x + bw} L${x + bw - 14},${y + bh} H${x} Z`, class: 'io' });
+    else el(svg, 'rect', { x, y, width: bw, height: bh, rx: 8, class: 'node' });
+    lines(svg, cx, y + bh / 2, s);
+    if (i < steps.length - 1) arrow(svg, `M${cx},${y + bh} V${ys[i + 1] - 2}`);
+  });
+  // side notes
+  const nx = cx + bw / 2 + 20, nw = W - nx - 18;
+  function note(y, h, arr, cls) {
+    el(svg, 'rect', { x: nx, y, width: nw, height: h, rx: 8, class: cls || 'ok' });
+    arr.forEach((t, i) => el(svg, 'text', { x: nx + 10, y: y + 18 + i * 15, class: i ? 'sm' : 'b' }, t));
+  }
+  note(ys[1], 74, ['Rejected, not guessed:', 'Wagner 3–5, "normal"/"healthy"', 'unless the clinician confirms,', 'ungraded "ulcer"'], 'ok');
+  note(ys[4] - 4, 66, ['No accuracy target is', 'built in: accuracy', 'belongs to the dataset.']);
+  note(ys[10] - 8, 74, ['Not trained, not a model:', 'left–right difference', '≥ 2.2 °C flags a region.', 'Fixed arithmetic.'], 'ok');
+})();
+
+/* ---------- 2. Program flowchart ---------- */
+(function () {
+  const svg = document.getElementById('flowsvg');
+  marker(svg, 'ag', '#7a8a94'); marker(svg, 'ar', '#c0392b');
+  const W = 760, cx = 230, bw = 340, bh = 50, dw = 300, dh = 84, gap = 30, sx = 560, sw = 186;
+  // type: t terminator, p process, d decision, o input/output
+  const N = [
+    ['t', ['Start: operator opens the station app']],
+    ['o', ['Enter the reference code', 'Anonymised code only, never a name']],
+    ['p', ['Patient rests, feet uncovered', 'Acclimatisation timer starts']],
+    ['d', ['Room 22–25 °C?', '(ambient sensor SHT31)'], ['Refused: room out of range', 'Fix the room, not the station']],
+    ['d', ['Rested 900 s?'], ['Refused: keep resting', 'Remaining time is shown']],
+    ['p', ['Thermal camera flat-field correction', 'Wait until it is finished']],
+    ['p', ['Interior light ON', 'Take the colour frame (Camera Module 3)']],
+    ['p', ['Interior light OFF', 'Wait 2 s so the light cannot warm the skin']],
+    ['d', ['Thermal frame valid?', 'fresh, not mid-FFC, calibrated'], ['Stopped: no temperature', 'Never filled in or guessed']],
+    ['p', ['Thermal frame (Y16) → °C', 'temp = raw / 100 − 273.15']],
+    ['o', ['Save the paired record', 'colour, raw Y16, temperatures, ambient,', 'timestamps, config hash, reference code']],
+    ['p', ['Registration', 'Colour mapped down to the thermal field']],
+    ['p', ['Find both feet', 'Station proposes left / right from foot shape']],
+    ['o', ['Operator confirms left and right', 'Swaps them if the proposal is wrong']],
+    ['p', ['8 regions per foot', 'Difference left − right in each region']],
+    ['d', ['Difference ≥ 2.2 °C?'], ['Mark the region FLAG', 'Fixed rule, inclusive'], true],
+    ['d', ['Colour model installed?'], ['"Colour model: not installed."', 'Stored for data collection'], true, 'No'],
+    ['p', ['Run MobileNetV2 on the Hailo-8L', 'Colour model result (class, confidence)']],
+    ['o', ['Results screen + one row in the scans CSV', 'Saved on the station only, nothing sent']],
+    ['t', ['End: ready for the next patient']],
+  ];
+  let y = 16; const pos = [];
+  for (const n of N) { const h = n[0] === 'd' ? dh : (n[1].length > 2 ? 62 : bh); pos.push({ y, h }); y += h + gap; }
+  const H = y; svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  N.forEach((n, i) => {
+    const [type, text, side, rejoin, yesNo] = n; const { y, h } = pos[i]; const x = cx - bw / 2;
+    if (type === 't') { el(svg, 'rect', { x: cx - 150, y, width: 300, height: h, rx: h / 2, class: 'term' }); el(svg, 'text', { x: cx, y: y + h / 2 + 4, 'text-anchor': 'middle', class: 'on' }, text[0]); }
+    else if (type === 'p') { el(svg, 'rect', { x, y, width: bw, height: h, rx: 6, class: 'node' }); lines(svg, cx, y + h / 2, text); }
+    else if (type === 'o') { el(svg, 'path', { d: `M${x + 16},${y} H${x + bw} L${x + bw - 16},${y + h} H${x} Z`, class: 'io' }); lines(svg, cx, y + h / 2, text); }
+    else { el(svg, 'path', { d: `M${cx},${y} L${cx + dw / 2},${y + h / 2} L${cx},${y + h} L${cx - dw / 2},${y + h / 2} Z`, class: 'dec' }); lines(svg, cx, y + h / 2, text, '', 15); }
+    if (i < N.length - 1) {
+      arrow(svg, `M${cx},${y + h} V${pos[i + 1].y - 2}`);
+      if (type === 'd') el(svg, 'text', { x: cx - 8, y: y + h + 16, 'text-anchor': 'end', class: 'lbl' }, rejoin && yesNo !== 'No' ? 'No' : 'Yes');
+    }
+    if (side) {
+      const red = !rejoin || yesNo === 'No';
+      const sy = y + h / 2 - 28, sideNo = yesNo || (rejoin ? 'Yes' : 'No');
+      el(svg, 'rect', { x: sx, y: sy, width: sw, height: 56, rx: 8, class: red && !rejoin ? 'bad' : 'ok' });
+      side.forEach((t, k) => el(svg, 'text', { x: sx + sw / 2, y: sy + 23 + k * 16, 'text-anchor': 'middle', class: k ? 'sm' : 'b' }, t));
+      arrow(svg, `M${cx + dw / 2},${y + h / 2} H${sx - 2}`, !rejoin);
+      el(svg, 'text', { x: cx + dw / 2 + 10, y: y + h / 2 - 8, class: 'lbl' + (!rejoin ? ' r' : '') }, sideNo);
+      if (rejoin) {
+        // rejoin the main line below: after the next node for "not installed" (skips the model), else just below
+        const target = yesNo === 'No' ? pos[i + 2] : pos[i + 1];
+        const ty = target.y - 12;
+        arrow(svg, `M${sx + sw / 2},${sy + 56} V${ty} H${cx + 4}`);
+      }
+    }
+  });
+})();
+
+/* ---------- 3. Exploded view (isometric SVG) ---------- */
+const PARTS = [
+  // n, name, BOM, what it does, colour, boxes [[w,h,d, x,y,z]] (mm, centre), explode direction [x,y,z] (mm at 100 %), group
+  [1, 'Service lid', 'D', 'Hinged top panel; opens for access to the cameras and wiring.', '#cfd6db', [[500, 8, 750, 0, 404, 0]], [0, 430, 0]],
+  [2, 'Camera head bracket', 'B', 'Aluminium plate on the inner rear wall. Holds both cameras 420 mm from the soles.', '#aab4bb', [[200, 120, 8, 0, 200, -322]], [0, 240, -40]],
+  [3, 'Thermal camera', 'G · FLIR Lepton 3.5 + PureThermal 3', 'Measures the sole temperatures (160 × 120, radiometric), over USB.', '#3a3f44', [[32, 32, 18, 24, 200, -309]], [0, 250, 40]],
+  [4, 'Colour camera', 'G · Camera Module 3', 'Takes the colour picture with focus, exposure and white balance locked.', '#2e7d4f', [[25, 24, 10, -24, 200, -313]], [0, 250, 40]],
+  [5, 'Interior light', 'G · 12 V LED strip + diffuser', 'Lights the soles for the colour picture only; switched by the MOSFET.', '#f2e8a0', [[160, 8, 8, 0, 268, -312], [160, 8, 8, 0, 132, -312], [8, 128, 8, 76, 200, -312], [8, 128, 8, -76, 200, -312]], [0, 250, 90]],
+  [6, 'Cabinet', 'A + D', 'GI sheet on a welded frame; matte black inside to block stray light and draughts.', '#e3e7ea', [[500, 400, 750, 0, 200, 0]], [0, 0, 0]],
+  [7, 'Ambient sensor', 'G · SHT31', 'Room temperature and humidity; scans outside 22–25 °C are refused.', '#c0392b', [[6, 20, 26, -241, 330, 200]], [-260, 0, 0]],
+  [8, 'Touchscreen', 'F · 7-inch', 'Operator screen: reference code, live views, results.', '#f5f7f8', [[40, 170, 300, 290, 260, 120]], [230, 0, 0]],
+  [9, 'Capture button', 'F · 22 mm, GPIO17', 'Same as CAPTURE on the screen.', '#c0392b', [[14, 24, 24, 316, 230, -80]], [300, 0, 0]],
+  [10, 'Status LED', 'F · 12 mm, GPIO27', 'Shows idle, resting, ready, capturing or error.', '#27ae60', [[10, 14, 14, 314, 180, -80]], [300, 0, 0]],
+  [11, 'Raspberry Pi 5 + AI HAT+', 'F · Hailo-8L', 'Runs the station program and the colour model, fully offline.', '#1f7a4a', [[85, 36, 56, -140, 160, -405]], [0, -60, -420]],
+  [12, 'Pi power supply', 'E · 27 W USB-C', 'Powers the Pi, cameras, touchscreen and sensors.', '#f0f0f0', [[70, 40, 30, -40, 110, -405]], [0, -60, -420]],
+  [13, 'LED power supply', 'E · 12 V 2 A', 'Powers the interior light through the MOSFET.', '#3a3f44', [[70, 40, 30, 50, 110, -405]], [0, -60, -420]],
+  [14, 'Light switch MOSFET', 'F · GPIO18', 'Turns the interior light on and off for the capture sequence.', '#1b4f72', [[25, 20, 10, 60, 190, -405]], [0, -60, -420]],
+  [15, 'Cooling fan', 'F · Active Cooler / bay fan', 'Keeps the electronics bay cool.', '#4a5258', [[80, 80, 25, 160, 280, -405]], [0, -60, -420]],
+  [16, 'AC inlet, fuse and switch', 'E · IEC C14', 'Mains in, with the fuse and the ON/OFF rocker switch.', '#2c3135', [[45, 30, 20, 170, 80, -420]], [0, -60, -420]],
+  [17, 'Internal outlet', 'E', 'Feeds both power supplies inside the closed bay.', '#f0f0f0', [[220, 30, 30, -20, 40, -405]], [0, -60, -420]],
+  [18, 'Blackout shroud', 'D', 'Double blackout fabric closed around the legs before scanning.', '#2b2b2b', [[500, 320, 4, 0, 200, 380]], [0, 0, 260]],
+  [19, 'Foot rest and heel support', 'C', 'Plywood base, foam and vinyl; heels rest here, soles toward the cameras.', '#6b4f3a', [[420, 12, 260, 0, 30, 520], [400, 70, 200, 0, 80, 520]], [0, -40, 540]],
+  [20, 'Telescoping legs', 'A', 'Set the opening level with the patient\'s feet (450–750 mm).', '#9aa3a9', [[40, 420, 40, 205, -210, 320], [40, 420, 40, -205, -210, 320], [40, 420, 40, 205, -210, -320], [40, 420, 40, -205, -210, -320]], [0, -260, 0]],
+  [21, 'Lockable castors', 'A', 'Lock the brakes before scanning.', '#454b50', [[60, 50, 60, 205, -445, 320], [60, 50, 60, -205, -445, 320], [60, 50, 60, 205, -445, -320], [60, 50, 60, -205, -445, -320]], [0, -380, 0]],
+];
+(function () {
+  const svg = document.getElementById('exploded'), slider = document.getElementById('ex');
+  const tbody = document.querySelector('#partsTable tbody');
+  let active = 0, vb = '';  // view box fixed from the fully exploded drawing
+  for (const p of PARTS) {
+    const tr = document.createElement('tr'); tr.dataset.n = p[0];
+    tr.innerHTML = `<td>${p[0]}</td><td>${p[1]}</td><td>${p[2]}</td><td>${p[3]}</td>`;
+    tr.style.cursor = 'pointer';
+    tr.onclick = () => { active = active === p[0] ? 0 : p[0]; draw(); };
+    tbody.appendChild(tr);
+  }
+  const C = Math.cos(Math.PI / 6), S = Math.sin(Math.PI / 6), K = 0.42;
+  const P = (x, y, z) => [(x - z) * C * K, ((x + z) * S - y) * K];
+  function shade(hex, f) {
+    const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    const m = v => Math.max(0, Math.min(255, Math.round(v * f)));
+    return `rgb(${m(r)},${m(g)},${m(b)})`;
+  }
+  function draw() {
+    const t = slider.value / 100;
+    svg.innerHTML = '';
+    const items = [];
+    for (const p of PARTS) {
+      const [n, , , , col, boxes, ex] = p;
+      for (const b of boxes) {
+        const [w, h, d, x, y, z] = b;
+        const X = x + ex[0] * t, Y = y + ex[1] * t, Z = z + ex[2] * t;
+        items.push({ n, col, w, h, d, X, Y, Z, key: X + Y + Z });
+      }
+    }
+    // painter's order: farther (smaller x+y+z for a viewer at +x +y +z) first; the cabinet shell is drawn early
+    // the cabinet shell, then the lid, are drawn first so the parts that come out of them stay visible
+    const rank = it => it.n === 6 ? -2e9 : it.n === 1 ? -1e9 : it.key;
+    items.sort((a, b) => rank(a) - rank(b));
+    let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+    const g = el(svg, 'g', {});
+    const anchors = {};
+    for (const it of items) {
+      const { w, h, d, X, Y, Z } = it, x0 = X - w / 2, x1 = X + w / 2, y0 = Y - h / 2, y1 = Y + h / 2, z0 = Z - d / 2, z1 = Z + d / 2;
+      const faces = [
+        [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1], 1.12],
+        [[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1], 0.86],
+        [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], 0.7],
+      ];
+      const dim = active && active !== it.n;
+      for (const f of faces) {
+        const pts = f.slice(0, 4).map(v => P(...v));
+        for (const [px, py] of pts) { minx = Math.min(minx, px); maxx = Math.max(maxx, px); miny = Math.min(miny, py); maxy = Math.max(maxy, py); }
+        el(g, 'polygon', { points: pts.map(q => q.join(',')).join(' '), fill: shade(it.col, f[4]), class: 'pf', opacity: dim ? 0.18 : (it.n === 6 ? 0.55 : 1) });
+      }
+      const top = P(X, y1, Z);
+      if (!anchors[it.n] || top[1] < anchors[it.n][1]) anchors[it.n] = top;
+    }
+    // numbered callouts with short leaders, offset up-left from the top of each part
+    const off = { 6: [-60, -40], 1: [-40, -26], 8: [40, -20], 9: [46, 0], 10: [46, 18], 7: [-40, -10], 18: [-50, 10], 19: [-50, 20], 20: [-40, 0], 21: [-40, 10],
+      2: [-46, -10], 3: [30, -26], 4: [-30, -26], 5: [-56, -24], 11: [-30, -30], 12: [-20, -40], 13: [10, -44], 14: [30, -36], 15: [40, -20], 16: [44, 10], 17: [-50, 6] };
+    for (const p of PARTS) {
+      const a = anchors[p[0]]; if (!a) continue;
+      const [dx, dy] = off[p[0]] || [-30, -20], bx = a[0] + dx, by = a[1] + dy;
+      if (active && active !== p[0]) continue;
+      el(g, 'line', { x1: a[0], y1: a[1], x2: bx, y2: by, class: 'lead' });
+      el(g, 'circle', { cx: bx, cy: by, r: 10, class: 'badge' });
+      el(g, 'text', { x: bx, y: by + 4, 'text-anchor': 'middle', class: 'bnum' }, p[0]);
+      minx = Math.min(minx, bx - 12); maxx = Math.max(maxx, bx + 12); miny = Math.min(miny, by - 12); maxy = Math.max(maxy, by + 12);
+    }
+    const pad = 16;
+    if (!vb) vb = `${minx - pad} ${miny - pad} ${maxx - minx + 2 * pad} ${maxy - miny + 2 * pad}`;
+    svg.setAttribute('viewBox', vb);
+    document.querySelectorAll('#partsTable tr[data-n]').forEach(r => r.classList.toggle('hl', +r.dataset.n === active));
+  }
+  slider.addEventListener('input', draw);
+  let timer = null;
+  document.getElementById('exBtn').onclick = () => {
+    if (timer) { clearInterval(timer); timer = null; return; }
+    let v = 0, dir = 1; slider.value = 0; draw();
+    timer = setInterval(() => { v += 2 * dir; if (v >= 100 || v <= 0) dir = -dir; slider.value = Math.max(0, Math.min(100, v)); draw(); }, 30);
+  };
+  draw();
+})();
+</script>
+</body>
+</html>
