@@ -56,6 +56,13 @@ class.</p>
 <li><b>Recall</b>: of all the grade X pictures, how many the model found.</li>
 <li><b>F1</b>: precision and recall combined into one number (both must be high for F1 to be high).</li>
 </ul>
+<h2>All 5 folds together (every picture tested once, by a model that never saw its patient)</h2>
+<div class="stats">
+<div class="stat"><b>58 %</b>overall accuracy, 750 test pictures</div>
+<div class="stat"><b>18 %–82 %</b>range across the 5 folds</div>
+<div class="stat"><b>40</b>patient groups in total</div></div>
+<div class="cmwrap"><table><tr><th>Rows: dataset grade<br>Columns: model output</th><th>class_0 (grade 0 pictures)</th><th>class_1 (grade 1 pictures)</th><th>class_2 (grade 2 pictures)</th><th>Matched</th></tr><tr><th>Dataset grade 0</th><td class="diag">38</td><td class="">88</td><td class="">24</td><td><b>38 of 150</b> (25 %)</td></tr><tr><th>Dataset grade 1</th><td class="">17</td><td class="diag">47</td><td class="">41</td><td><b>47 of 105</b> (45 %)</td></tr><tr><th>Dataset grade 2</th><td class="">32</td><td class="">114</td><td class="diag">349</td><td><b>349 of 495</b> (71 %)</td></tr></table></div>
+<div class="cmwrap"><table><tr><th></th><th>Precision</th><th>Recall</th><th>F1</th><th>Test pictures</th></tr><tr><th>Grade 0</th><td>44 %</td><td>25 %</td><td>32 %</td><td>150</td></tr><tr><th>Grade 1</th><td>19 %</td><td>45 %</td><td>27 %</td><td>105</td></tr><tr><th>Grade 2</th><td>84 %</td><td>71 %</td><td>77 %</td><td>495</td></tr></table></div>
 
 
 <h2>The 10 samples</h2>
